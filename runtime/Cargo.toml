@@ -7,5 +7,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0"
+image = "0.24"
 onnxruntime = { git = "https://github.com/ulagbulag-village/onnxruntime-rs.git" }
 tokio = { version = "1.17", features = ["full"] }
+ureq = "2.4"
