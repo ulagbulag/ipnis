@@ -25,11 +25,11 @@ pub struct Tensor {
 }
 
 impl<'t> AsOrtTensorDyn<'t> for Tensor {
-    fn as_ort_tensor<'m>(&self, session: &'m Session) -> onnxruntime::Result<OrtTensorDyn<'t>>
+    fn as_ort_tensor_dyn<'m>(&self, session: &'m Session) -> onnxruntime::Result<OrtTensorDyn<'t>>
     where
         'm: 't,
     {
-        self.data.as_ort_tensor(session)
+        self.data.as_ort_tensor_dyn(session)
     }
 }
 
@@ -65,13 +65,13 @@ pub enum TensorData {
 }
 
 impl<'t> AsOrtTensorDyn<'t> for TensorData {
-    fn as_ort_tensor<'m>(&self, session: &'m Session) -> onnxruntime::Result<OrtTensorDyn<'t>>
+    fn as_ort_tensor_dyn<'m>(&self, session: &'m Session) -> onnxruntime::Result<OrtTensorDyn<'t>>
     where
         'm: 't,
     {
         match self {
-            Self::Dynamic(v) => v.as_ort_tensor(session),
-            Self::Image(v) => v.as_ort_tensor(session),
+            Self::Dynamic(v) => v.as_ort_tensor_dyn(session),
+            Self::Image(v) => v.as_ort_tensor_dyn(session),
         }
     }
 }

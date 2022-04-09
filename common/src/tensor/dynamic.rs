@@ -20,13 +20,13 @@ impl From<DynamicTensorData> for TensorData {
 }
 
 impl<'t> AsOrtTensorDyn<'t> for DynamicTensorData {
-    fn as_ort_tensor<'m>(&self, session: &'m Session) -> onnxruntime::Result<OrtTensorDyn<'t>>
+    fn as_ort_tensor_dyn<'m>(&self, session: &'m Session) -> onnxruntime::Result<OrtTensorDyn<'t>>
     where
         'm: 't,
     {
         match self {
-            Self::U8(v) => v.as_ort_tensor(session),
-            Self::F32(v) => v.as_ort_tensor(session),
+            Self::U8(v) => v.as_ort_tensor_dyn(session),
+            Self::F32(v) => v.as_ort_tensor_dyn(session),
         }
     }
 }
