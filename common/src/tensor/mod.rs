@@ -1,10 +1,12 @@
+pub mod dynamic;
 pub mod image;
 
-use std::borrow::Cow;
+use onnxruntime::{
+    session::Session,
+    tensor::{AsOrtTensorDyn, OrtTensorDyn},
+};
 
-use onnxruntime::TensorElementDataType;
-
-use crate::shape::{Dimensions, Shape};
+use crate::shape::{Dimensions, Shape, TensorType};
 
 pub trait ToTensor {
     fn to_tensor(&self, shape: &Shape) -> anyhow::Result<Tensor>;
@@ -17,12 +19,21 @@ impl ToTensor for Box<dyn ToTensor> {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Tensor<'a> {
-    pub(crate) name: String,
-    pub(crate) data: Cow<'a, TensorData>,
+pub struct Tensor {
+    pub name: String,
+    pub data: TensorData,
 }
 
-impl<'a> ToTensor for Tensor<'a> {
+impl<'t> AsOrtTensorDyn<'t> for Tensor {
+    fn as_ort_tensor<'m>(&self, session: &'m Session) -> onnxruntime::Result<OrtTensorDyn<'t>>
+    where
+        'm: 't,
+    {
+        self.data.as_ort_tensor(session)
+    }
+}
+
+impl ToTensor for Tensor {
     fn to_tensor(&self, parent: &Shape) -> anyhow::Result<Self> {
         let child = self.shape();
         if parent.contains(&child) {
@@ -37,7 +48,7 @@ impl<'a> ToTensor for Tensor<'a> {
     }
 }
 
-impl<'a> Tensor<'a> {
+impl Tensor {
     fn shape(&self) -> Shape {
         Shape {
             name: self.name.clone(),
@@ -49,18 +60,33 @@ impl<'a> Tensor<'a> {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum TensorData {
-    Image(self::image::TensorImageData),
+    Dynamic(self::dynamic::DynamicTensorData),
+    Image(self::image::ImageTensorData),
+}
+
+impl<'t> AsOrtTensorDyn<'t> for TensorData {
+    fn as_ort_tensor<'m>(&self, session: &'m Session) -> onnxruntime::Result<OrtTensorDyn<'t>>
+    where
+        'm: 't,
+    {
+        match self {
+            Self::Dynamic(v) => v.as_ort_tensor(session),
+            Self::Image(v) => v.as_ort_tensor(session),
+        }
+    }
 }
 
 impl TensorData {
-    fn ty(&self) -> TensorElementDataType {
+    fn ty(&self) -> TensorType {
         match self {
+            Self::Dynamic(v) => v.ty(),
             Self::Image(v) => v.ty(),
         }
     }
 
     fn dimensions(&self) -> Dimensions {
         match self {
+            Self::Dynamic(v) => v.dimensions(),
             Self::Image(v) => v.dimensions(),
         }
     }

@@ -1,3 +1,3 @@
 [workspace]
-members = ["pallet", "runtime"]
-default-members = ["runtime"]
+members = ["api", "common", "example", "pallet", "runtime"]
+default-members = ["example"]

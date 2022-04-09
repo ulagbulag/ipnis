@@ -1,0 +1,16 @@
+[package]
+name = "ipnis-common"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0"
+async-trait = "0.1"
+avusen = { path = "../../avusen" }
+image = "0.24"
+onnxruntime = { git = "https://github.com/ulagbulag-village/onnxruntime-rs.git", features = [
+    "serde",
+] }
+serde = { version = "1.0", features = ["derive"] }

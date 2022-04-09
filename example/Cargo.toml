@@ -1,5 +1,5 @@
 [package]
-name = "ipnis-runtime"
+name = "example"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,5 +8,6 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0"
 avusen = { path = "../../avusen" }
-ipnis-common = { path = "../common" }
-tokio = { version = "1.17", features = ["sync"] }
+ipnis-runtime = { path = "../runtime" }
+tokio = { version = "1.17", features = ["full"] }
+ureq = "2.4"

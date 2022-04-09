@@ -1,23 +1,20 @@
 use anyhow::Result;
-use image::ColorType;
 use onnxruntime::{
     session::{Input, Output},
     TensorElementDataType,
 };
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+use crate::tensor::image::ImageChannel;
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Shape {
-    pub(crate) name: String,
-    pub(crate) ty: TensorElementDataType,
+    pub name: String,
+    pub(crate) ty: TensorType,
     pub(crate) dimensions: Dimensions,
 }
 
 impl Shape {
-    fn new(
-        name: String,
-        ty: TensorElementDataType,
-        dimensions: Vec<Option<usize>>,
-    ) -> Result<Self> {
+    fn new(name: String, ty: TensorType, dimensions: Vec<Option<usize>>) -> Result<Self> {
         Ok(Self {
             name,
             ty,
@@ -27,17 +24,7 @@ impl Shape {
                         Dimensions::Label { num_labels }
                     }
                     [Some(1), Some(channels), width, height] => Dimensions::Image {
-                        channels: match (channels, ty) {
-                            (1, TensorElementDataType::Uint8)
-                            | (1, TensorElementDataType::Float) => ColorType::L8,
-                            (2, TensorElementDataType::Uint8)
-                            | (2, TensorElementDataType::Float) => ColorType::La8,
-                            (3, TensorElementDataType::Uint8)
-                            | (3, TensorElementDataType::Float) => ColorType::Rgb8,
-                            (4, TensorElementDataType::Uint8)
-                            | (4, TensorElementDataType::Float) => ColorType::Rgba8,
-                            _ => bail!("Failed to parse the channels: [{}] as {:?}", channels, ty,),
-                        },
+                        channels: channels.try_into()?,
                         width,
                         height,
                     },
@@ -52,14 +39,19 @@ impl Shape {
             && self.ty == child.ty
             && self.dimensions.contains(&child.dimensions)
     }
+
+    pub fn to_vec(&self) -> Vec<Option<usize>> {
+        self.dimensions.to_vec()
+    }
 }
 
 impl TryFrom<&'_ Input> for Shape {
     type Error = anyhow::Error;
 
     fn try_from(value: &Input) -> Result<Self, Self::Error> {
+        let ty = value.input_type.try_into()?;
         let dimensions = value.dimensions().collect();
-        Self::new(value.name.clone(), value.input_type, dimensions)
+        Self::new(value.name.clone(), ty, dimensions)
     }
 }
 
@@ -67,19 +59,20 @@ impl TryFrom<&'_ Output> for Shape {
     type Error = anyhow::Error;
 
     fn try_from(value: &Output) -> Result<Self, Self::Error> {
+        let ty = value.output_type.try_into()?;
         let dimensions = value.dimensions().collect();
-        Self::new(value.name.clone(), value.output_type, dimensions)
+        Self::new(value.name.clone(), ty, dimensions)
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Dimensions {
     Unknown(Vec<Option<usize>>),
     Label {
         num_labels: usize,
     },
     Image {
-        channels: ColorType,
+        channels: ImageChannel,
         width: Option<usize>,
         height: Option<usize>,
     },
@@ -129,6 +122,45 @@ impl Dimensions {
             }
             // Otherwise
             _ => false,
+        }
+    }
+
+    fn to_vec(&self) -> Vec<Option<usize>> {
+        match self {
+            Dimensions::Unknown(v) => v.clone(),
+            Dimensions::Label { num_labels } => vec![Some(1), Some(*num_labels)],
+            Dimensions::Image {
+                channels,
+                width,
+                height,
+            } => vec![Some(1), Some((*channels).into()), *width, *height],
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum TensorType {
+    U8,
+    F32,
+}
+
+impl TryFrom<TensorElementDataType> for TensorType {
+    type Error = anyhow::Error;
+
+    fn try_from(value: TensorElementDataType) -> Result<Self, Self::Error> {
+        match value {
+            TensorElementDataType::U8 => Ok(Self::U8),
+            TensorElementDataType::F32 => Ok(Self::F32),
+            _ => bail!("Unsupported TensorType: {:?}", value),
+        }
+    }
+}
+
+impl From<TensorType> for TensorElementDataType {
+    fn from(value: TensorType) -> Self {
+        match value {
+            TensorType::U8 => Self::U8,
+            TensorType::F32 => Self::F32,
         }
     }
 }
