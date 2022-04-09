@@ -8,5 +8,5 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0"
 avusen = { path = "../../avusen" }
-ipnis-common = { path = "../common" }
+ipnis-core = { path = "../core" }
 tokio = { version = "1.17", features = ["sync"] }

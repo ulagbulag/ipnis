@@ -1,4 +1,4 @@
-use ipnis_common::shape::Shape;
+use ipnis_core::shape::Shape;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Model<P> {

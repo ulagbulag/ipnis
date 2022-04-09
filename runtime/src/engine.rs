@@ -2,14 +2,14 @@ use std::{collections::HashMap, future::Future, path::Path, sync::Arc};
 
 use anyhow::Result;
 use avusen::{function::Function, node::NodeChildren};
-use common::tensor::{dynamic::DynamicTensorData, Tensor};
-use ipnis_common::{
+use ipnis_core::{
     async_trait::async_trait,
     onnxruntime::{
         self, environment::Environment, ndarray, session::Session, GraphOptimizationLevel,
         LoggingLevel,
     },
     tensor::ToTensor,
+    tensor::{dynamic::DynamicTensorData, Tensor},
     Ipnis,
 };
 use tokio::sync::Mutex;
