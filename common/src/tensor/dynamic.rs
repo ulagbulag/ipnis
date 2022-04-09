@@ -41,11 +41,7 @@ impl DynamicTensorData {
 
     pub(super) fn dimensions(&self) -> Dimensions {
         fn dimensions_with_shape(shape: &[usize]) -> Dimensions {
-            Dimensions::Image {
-                channels: shape[1].try_into().unwrap(),
-                width: Some(shape[2]),
-                height: Some(shape[3]),
-            }
+            Dimensions::Unknown(shape.iter().map(|e| Some(*e)).collect())
         }
 
         match self {
