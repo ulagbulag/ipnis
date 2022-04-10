@@ -14,8 +14,9 @@ use ipnis_runtime::{
             tensor::ndarray_tensor::NdArrayTensor,
         },
         tensor::{dynamic::DynamicTensorData, TensorData, ToTensor},
+        IpnisRaw,
     },
-    engine::Engine,
+    Engine,
 };
 
 #[tokio::main]
@@ -33,12 +34,15 @@ async fn main() -> Result<()> {
         .await?;
 
     let image = ImageReader::open("cat.jpg")?.decode()?;
-    let images = vec![("data".to_string(), Box::new(image) as Box<dyn ToTensor>)]
-        .into_iter()
-        .collect();
+    let images = vec![(
+        "data".to_string(),
+        Box::new(image) as Box<dyn ToTensor + Send + Sync>,
+    )]
+    .into_iter()
+    .collect();
 
     engine
-        .run(&model, &images, |outputs| async move {
+        .call_raw(&model, &images, |outputs| async move {
             let labels = get_imagenet_labels()?;
 
             // Downloaded model does not have a softmax as final layer; call softmax on second axis

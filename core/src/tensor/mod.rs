@@ -12,7 +12,7 @@ pub trait ToTensor {
     fn to_tensor(&self, shape: &Shape) -> anyhow::Result<Tensor>;
 }
 
-impl ToTensor for Box<dyn ToTensor> {
+impl ToTensor for Box<dyn ToTensor + Send + Sync> {
     fn to_tensor(&self, shape: &Shape) -> anyhow::Result<Tensor> {
         (**self).to_tensor(shape)
     }
