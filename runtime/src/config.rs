@@ -1,4 +1,4 @@
-use ipnis_core::onnxruntime::GraphOptimizationLevel;
+use ipnis_common::onnxruntime::GraphOptimizationLevel;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct EngineConfig {

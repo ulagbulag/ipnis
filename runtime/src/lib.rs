@@ -1,6 +1,6 @@
 #[macro_use]
 extern crate anyhow;
-pub extern crate ipnis_core as common;
+pub extern crate ipnis_common as common;
 #[macro_use]
 extern crate serde;
 
@@ -10,14 +10,13 @@ use std::{collections::HashMap, future::Future, path::Path, sync::Arc};
 
 use anyhow::Result;
 use avusen::{function::Function, node::NodeChildren};
-use common::{model::Model, IpnisRaw};
-pub use ipnis_core::onnxruntime::GraphOptimizationLevel;
-use ipnis_core::{
+pub use ipnis_common::onnxruntime::GraphOptimizationLevel;
+use ipnis_common::{
     async_trait::async_trait,
+    model::Model,
     onnxruntime::{self, environment::Environment, ndarray, session::Session, LoggingLevel},
-    tensor::ToTensor,
-    tensor::{dynamic::DynamicTensorData, Tensor},
-    Ipnis,
+    tensor::{dynamic::DynamicTensorData, Tensor, ToTensor},
+    Ipnis, IpnisRaw, Map,
 };
 use tokio::sync::Mutex;
 
@@ -110,7 +109,7 @@ impl IpnisRaw for Engine {
     async fn call_raw<P, T, F, Fut>(
         &self,
         model: &Model<P>,
-        inputs: &HashMap<String, T>,
+        inputs: &Map<String, T>,
         f_outputs: F,
     ) -> Result<()>
     where

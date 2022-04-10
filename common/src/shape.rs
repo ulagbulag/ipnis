@@ -1,4 +1,5 @@
 use anyhow::Result;
+#[cfg(feature = "onnxruntime")]
 use onnxruntime::{
     session::{Input, Output},
     TensorElementDataType,
@@ -45,6 +46,7 @@ impl Shape {
     }
 }
 
+#[cfg(feature = "onnxruntime")]
 impl TryFrom<&'_ Input> for Shape {
     type Error = anyhow::Error;
 
@@ -55,6 +57,7 @@ impl TryFrom<&'_ Input> for Shape {
     }
 }
 
+#[cfg(feature = "onnxruntime")]
 impl TryFrom<&'_ Output> for Shape {
     type Error = anyhow::Error;
 
@@ -144,6 +147,7 @@ pub enum TensorType {
     F32,
 }
 
+#[cfg(feature = "onnxruntime")]
 impl TryFrom<TensorElementDataType> for TensorType {
     type Error = anyhow::Error;
 
@@ -156,6 +160,7 @@ impl TryFrom<TensorElementDataType> for TensorType {
     }
 }
 
+#[cfg(feature = "onnxruntime")]
 impl From<TensorType> for TensorElementDataType {
     fn from(value: TensorType) -> Self {
         match value {

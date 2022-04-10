@@ -1,5 +1,5 @@
+#[cfg(feature = "onnxruntime")]
 use onnxruntime::{
-    ndarray,
     session::Session,
     tensor::{AsOrtTensorDyn, OrtTensorDyn},
 };
@@ -19,6 +19,7 @@ impl From<DynamicTensorData> for TensorData {
     }
 }
 
+#[cfg(feature = "onnxruntime")]
 impl<'t> AsOrtTensorDyn<'t> for DynamicTensorData {
     fn as_ort_tensor_dyn<'m>(&self, session: &'m Session) -> onnxruntime::Result<OrtTensorDyn<'t>>
     where

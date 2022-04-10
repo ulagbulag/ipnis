@@ -1,6 +1,7 @@
 pub mod dynamic;
 pub mod image;
 
+#[cfg(feature = "onnxruntime")]
 use onnxruntime::{
     session::Session,
     tensor::{AsOrtTensorDyn, OrtTensorDyn},
@@ -24,6 +25,7 @@ pub struct Tensor {
     pub data: TensorData,
 }
 
+#[cfg(feature = "onnxruntime")]
 impl<'t> AsOrtTensorDyn<'t> for Tensor {
     fn as_ort_tensor_dyn<'m>(&self, session: &'m Session) -> onnxruntime::Result<OrtTensorDyn<'t>>
     where
@@ -64,6 +66,7 @@ pub enum TensorData {
     Image(self::image::ImageTensorData),
 }
 
+#[cfg(feature = "onnxruntime")]
 impl<'t> AsOrtTensorDyn<'t> for TensorData {
     fn as_ort_tensor_dyn<'m>(&self, session: &'m Session) -> onnxruntime::Result<OrtTensorDyn<'t>>
     where

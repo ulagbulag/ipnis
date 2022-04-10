@@ -5,7 +5,16 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+default = []
+
 [dependencies]
 anyhow = "1.0"
 async-trait = "0.1"
 avusen = { path = "../../avusen" }
+image = "0.24"
+ndarray = { version = "0.15", features = ["serde"] }
+onnxruntime = { git = "https://github.com/ulagbulag-village/onnxruntime-rs.git", optional = true, features = [
+    "serde",
+] }
+serde = { version = "1.0", features = ["derive"] }

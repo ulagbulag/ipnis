@@ -1,8 +1,8 @@
 use std::borrow::Cow;
 
 use image::{imageops::FilterType, DynamicImage, GenericImageView, Pixel};
+#[cfg(feature = "onnxruntime")]
 use onnxruntime::{
-    ndarray,
     session::Session,
     tensor::{AsOrtTensorDyn, OrtTensorDyn},
 };
@@ -22,6 +22,7 @@ impl From<ImageTensorData> for TensorData {
     }
 }
 
+#[cfg(feature = "onnxruntime")]
 impl<'t> AsOrtTensorDyn<'t> for ImageTensorData {
     fn as_ort_tensor_dyn<'m>(&self, session: &'m Session) -> onnxruntime::Result<OrtTensorDyn<'t>>
     where
