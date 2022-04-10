@@ -21,7 +21,7 @@ use ipnis_runtime::{
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let engine = Engine::new()?;
+    let engine = Engine::new(Default::default())?;
 
     let model = engine
         .get_model(

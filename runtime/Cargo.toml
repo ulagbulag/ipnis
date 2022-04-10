@@ -9,4 +9,5 @@ edition = "2021"
 anyhow = "1.0"
 avusen = { path = "../../avusen" }
 ipnis-core = { path = "../core" }
+serde = { version = "1.0", features = ["derive"] }
 tokio = { version = "1.17", features = ["sync"] }

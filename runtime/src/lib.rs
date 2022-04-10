@@ -1,23 +1,27 @@
 #[macro_use]
 extern crate anyhow;
 pub extern crate ipnis_core as common;
+#[macro_use]
+extern crate serde;
+
+mod config;
 
 use std::{collections::HashMap, future::Future, path::Path, sync::Arc};
 
 use anyhow::Result;
 use avusen::{function::Function, node::NodeChildren};
 use common::{model::Model, IpnisRaw};
+pub use ipnis_core::onnxruntime::GraphOptimizationLevel;
 use ipnis_core::{
     async_trait::async_trait,
-    onnxruntime::{
-        self, environment::Environment, ndarray, session::Session, GraphOptimizationLevel,
-        LoggingLevel,
-    },
+    onnxruntime::{self, environment::Environment, ndarray, session::Session, LoggingLevel},
     tensor::ToTensor,
     tensor::{dynamic::DynamicTensorData, Tensor},
     Ipnis,
 };
 use tokio::sync::Mutex;
+
+pub use crate::config::EngineConfig;
 
 pub struct Engine {
     environment: Environment,
@@ -27,17 +31,19 @@ pub struct Engine {
     ///
     /// * Source: https://github.com/microsoft/onnxruntime/issues/114#issuecomment-444725508
     cache: Mutex<HashMap<String, Arc<Session>>>,
+    config: EngineConfig,
 }
 
 impl Engine {
-    pub fn new() -> Result<Self> {
+    pub fn new(config: EngineConfig) -> Result<Self> {
         Ok(Self {
             environment: Environment::builder()
-                .with_name("test")
+                .with_name("ipnis")
                 // The ONNX Runtime's log level can be different than the one of the wrapper crate or the application.
-                .with_log_level(LoggingLevel::Info)
+                .with_log_level(LoggingLevel::Warning)
                 .build()?,
             cache: Default::default(),
+            config,
         })
     }
 
@@ -54,8 +60,8 @@ impl Engine {
                 let session = self
                     .environment
                     .new_session_builder()?
-                    .with_optimization_level(GraphOptimizationLevel::Basic)?
-                    .with_number_threads(1)?
+                    .with_optimization_level(self.config.optimization_level)?
+                    .with_number_threads(self.config.number_threads.into())?
                     .with_model_from_file(&path)?;
                 let session = Arc::new(session);
                 cache.insert(name.to_string(), session.clone());
