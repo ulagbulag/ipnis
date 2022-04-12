@@ -1,5 +1,6 @@
 pub mod dynamic;
 pub mod image;
+pub mod string;
 
 #[cfg(feature = "onnxruntime")]
 use onnxruntime::{
@@ -64,6 +65,7 @@ impl Tensor {
 pub enum TensorData {
     Dynamic(self::dynamic::DynamicTensorData),
     Image(self::image::ImageTensorData),
+    String(self::string::StringTensorData),
 }
 
 #[cfg(feature = "onnxruntime")]
@@ -75,6 +77,7 @@ impl<'t> AsOrtTensorDyn<'t> for TensorData {
         match self {
             Self::Dynamic(v) => v.as_ort_tensor_dyn(session),
             Self::Image(v) => v.as_ort_tensor_dyn(session),
+            Self::String(v) => v.as_ort_tensor_dyn(session),
         }
     }
 }
@@ -84,6 +87,7 @@ impl TensorData {
         match self {
             Self::Dynamic(v) => v.ty(),
             Self::Image(v) => v.ty(),
+            Self::String(v) => v.ty(),
         }
     }
 
@@ -91,6 +95,7 @@ impl TensorData {
         match self {
             Self::Dynamic(v) => v.dimensions(),
             Self::Image(v) => v.dimensions(),
+            Self::String(v) => v.dimensions(),
         }
     }
 }

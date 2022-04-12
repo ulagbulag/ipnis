@@ -153,5 +153,6 @@ where
         TensorType::F32 => ImageTensorData::F32(
             ndarray::Array::from_shape_fn(shape, |idx| (get_pixel(idx) as f32) / 255.0).into(),
         ),
+        TensorType::I64 => unreachable!("Unsupported TensorType: {:?}", ty),
     }
 }

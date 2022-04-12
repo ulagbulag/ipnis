@@ -71,13 +71,16 @@ impl TryFrom<&'_ Output> for Shape {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Dimensions {
     Unknown(Vec<Option<usize>>),
-    Label {
-        num_labels: usize,
-    },
     Image {
         channels: ImageChannel,
         width: Option<usize>,
         height: Option<usize>,
+    },
+    Label {
+        num_labels: usize,
+    },
+    String {
+        max_length: Option<usize>,
     },
 }
 
@@ -97,15 +100,6 @@ impl Dimensions {
         match (self, child) {
             // Unknown
             (Self::Unknown(parent), Self::Unknown(child)) => parent == child,
-            // Label
-            (
-                Self::Label {
-                    num_labels: parent_num_labels,
-                },
-                Self::Label {
-                    num_labels: child_num_labels,
-                },
-            ) => parent_num_labels == child_num_labels,
             // Image
             (
                 Self::Image {
@@ -123,6 +117,24 @@ impl Dimensions {
                     && try_contains(parent_width, child_width)
                     && try_contains(parent_height, child_height)
             }
+            // Label
+            (
+                Self::Label {
+                    num_labels: parent_num_labels,
+                },
+                Self::Label {
+                    num_labels: child_num_labels,
+                },
+            ) => parent_num_labels == child_num_labels,
+            // Label
+            (
+                Self::String {
+                    max_length: parent_max_length,
+                },
+                Self::String {
+                    max_length: child_max_length,
+                },
+            ) => try_contains(parent_max_length, child_max_length),
             // Otherwise
             _ => false,
         }
@@ -131,18 +143,20 @@ impl Dimensions {
     fn to_vec(&self) -> Vec<Option<usize>> {
         match self {
             Dimensions::Unknown(v) => v.clone(),
-            Dimensions::Label { num_labels } => vec![Some(1), Some(*num_labels)],
             Dimensions::Image {
                 channels,
                 width,
                 height,
             } => vec![Some(1), Some((*channels).into()), *width, *height],
+            Dimensions::Label { num_labels } => vec![Some(1), Some(*num_labels)],
+            Dimensions::String { max_length } => vec![Some(1), *max_length],
         }
     }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum TensorType {
+    I64,
     U8,
     F32,
 }
@@ -153,6 +167,7 @@ impl TryFrom<TensorElementDataType> for TensorType {
 
     fn try_from(value: TensorElementDataType) -> Result<Self, Self::Error> {
         match value {
+            TensorElementDataType::I64 => Ok(Self::I64),
             TensorElementDataType::U8 => Ok(Self::U8),
             TensorElementDataType::F32 => Ok(Self::F32),
             _ => bail!("Unsupported TensorType: {:?}", value),
@@ -164,6 +179,7 @@ impl TryFrom<TensorElementDataType> for TensorType {
 impl From<TensorType> for TensorElementDataType {
     fn from(value: TensorType) -> Self {
         match value {
+            TensorType::I64 => Self::I64,
             TensorType::U8 => Self::U8,
             TensorType::F32 => Self::F32,
         }
