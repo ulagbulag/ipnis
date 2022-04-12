@@ -1,5 +1,22 @@
 # IPNIS
 
+## Examples
+
+```bash
+cargo run --release --package ipnis-modules-{module}-example
+```
+
+Belows are available modules:
+(TODO: downloading the .onnx models are not supported yet!)
+
+### NLP
+
+* question-answering
+
+### Vision
+
+* image-classification
+
 ## License
 
 * IPNIS Modules (`ipnis-modules-*`) and all other utilities are licensed under [Apache 2.0](LICENSE-APACHE2).

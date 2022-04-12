@@ -1,3 +1,11 @@
 [workspace]
-members = ["api", "common", "example", "pallet", "runtime"]
-default-members = ["example"]
+members = [
+    "api",
+    "common",
+    "modules/nlp/question-answering",
+    "modules/vision/image-classification",
+    "modules/vision/image-classification/example",
+    "pallet",
+    "runtime",
+]
+default-members = []
