@@ -92,7 +92,7 @@ impl ToTensor for DynamicImage {
         };
 
         Ok(Tensor {
-            name: shape.name.clone(),
+            name: shape.name.to_string(),
             data: data.into(),
         })
     }

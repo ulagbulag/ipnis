@@ -4,6 +4,6 @@ use crate::shape::Shape;
 pub struct Model<P> {
     pub name: String,
     pub path: P,
-    pub inputs: Vec<Shape>,
-    pub outputs: Vec<Shape>,
+    pub inputs: Vec<Shape<'static>>,
+    pub outputs: Vec<Shape<'static>>,
 }

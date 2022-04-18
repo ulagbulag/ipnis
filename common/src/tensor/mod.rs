@@ -49,23 +49,17 @@ impl AsTensorData for Tensor {
 
 impl ToTensor for Tensor {
     fn to_tensor(&self, parent: &Shape) -> anyhow::Result<Self> {
-        let child = self.shape();
-        if parent.contains(&child) {
-            Ok(self.clone())
-        } else {
-            bail!(
-                "Shape mismatched: Expected {expected:?}, but Given {given:?}",
-                expected = parent,
-                given = child,
-            )
-        }
+        self.data.to_tensor(parent)
     }
 }
 
-impl Tensor {
+impl<Data> Tensor<Data>
+where
+    Data: AsTensorData,
+{
     pub fn shape(&self) -> Shape {
         Shape {
-            name: self.name.clone(),
+            name: self.name.as_str().into(),
             ty: self.data.ty(),
             dimensions: self.data.dimensions(),
         }
@@ -111,6 +105,34 @@ impl AsTensorData for TensorData {
             Self::Class(v) => v.dimensions(),
             Self::Image(v) => v.dimensions(),
             Self::String(v) => v.dimensions(),
+        }
+    }
+}
+
+impl ToTensor for TensorData {
+    fn to_tensor(&self, parent: &Shape) -> anyhow::Result<Tensor> {
+        let child = self.shape(&parent.name);
+        if parent.contains(&child) {
+            Ok(Tensor {
+                name: parent.name.to_string(),
+                data: self.to_owned(),
+            })
+        } else {
+            bail!(
+                "Shape mismatched: Expected {expected:?}, but Given {given:?}",
+                expected = parent,
+                given = child,
+            )
+        }
+    }
+}
+
+impl TensorData {
+    fn shape<'a>(&self, name: &'a str) -> Shape<'a> {
+        Shape {
+            name: name.into(),
+            ty: self.ty(),
+            dimensions: self.dimensions(),
         }
     }
 }

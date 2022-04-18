@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use anyhow::Result;
 #[cfg(feature = "onnxruntime")]
 use onnxruntime::{
@@ -8,14 +10,14 @@ use onnxruntime::{
 use crate::tensor::image::ImageChannel;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Shape {
-    pub name: String,
+pub struct Shape<'a> {
+    pub name: Cow<'a, str>,
     pub(crate) ty: TensorType,
     pub(crate) dimensions: Dimensions,
 }
 
-impl Shape {
-    fn new(name: String, ty: TensorType, dimensions: Vec<Option<usize>>) -> Result<Self> {
+impl<'a> Shape<'a> {
+    fn new(name: Cow<'a, str>, ty: TensorType, dimensions: Vec<Option<usize>>) -> Result<Self> {
         Ok(Self {
             name,
             ty,
@@ -48,24 +50,24 @@ impl Shape {
 }
 
 #[cfg(feature = "onnxruntime")]
-impl TryFrom<&'_ Input> for Shape {
+impl<'a> TryFrom<&'_ Input> for Shape<'a> {
     type Error = anyhow::Error;
 
     fn try_from(value: &Input) -> Result<Self, Self::Error> {
         let ty = value.input_type.try_into()?;
         let dimensions = value.dimensions().collect();
-        Self::new(value.name.clone(), ty, dimensions)
+        Self::new(value.name.clone().into(), ty, dimensions)
     }
 }
 
 #[cfg(feature = "onnxruntime")]
-impl TryFrom<&'_ Output> for Shape {
+impl<'a> TryFrom<&'_ Output> for Shape<'a> {
     type Error = anyhow::Error;
 
     fn try_from(value: &Output) -> Result<Self, Self::Error> {
         let ty = value.output_type.try_into()?;
         let dimensions = value.dimensions().collect();
-        Self::new(value.name.clone(), ty, dimensions)
+        Self::new(value.name.clone().into(), ty, dimensions)
     }
 }
 
@@ -101,6 +103,9 @@ impl Dimensions {
         match (self, child) {
             // Unknown
             (Self::Unknown(parent), Self::Unknown(child)) => parent == child,
+            (Self::Unknown(parent), Self::Class { .. }) => parent.len() == 2,
+            (Self::Unknown(parent), Self::Image { .. }) => parent.len() == 4,
+            (Self::Unknown(parent), Self::String { .. }) => parent.len() == 2,
             // Class
             (
                 Self::Class {

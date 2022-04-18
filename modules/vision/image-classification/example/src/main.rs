@@ -44,15 +44,15 @@ async fn main() -> Result<()> {
 
             // Downloaded model does not have a softmax as final layer; call softmax on second axis
             // and iterate on resulting probabilities, creating an index to later access labels.
-            if let ClassTensorData::F32(data) = &output.data {
+            if let ClassTensorData::F32(data) = output {
                 let data = data.softmax(ndarray::Axis(1));
                 let probabilities: Vec<(usize, Vec<_>)> = data
                     .rows()
                     .into_iter()
                     .map(|row| {
                         // Sort probabilities so highest is at beginning of vector.
-                        let mut row: Vec<_> = row.into_owned().into_iter().enumerate().collect();
-                        row.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+                        let mut row: Vec<_> = row.into_iter().enumerate().collect();
+                        row.sort_unstable_by(|a, b| b.1.partial_cmp(a.1).unwrap());
                         row
                     })
                     .enumerate()

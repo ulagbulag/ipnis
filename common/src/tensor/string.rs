@@ -4,7 +4,7 @@ use onnxruntime::{
     tensor::{AsOrtTensorDyn, OrtTensorDyn},
 };
 
-use super::{AsTensorData, TensorData};
+use super::{dynamic::DynamicTensorData, AsTensorData, Tensor, TensorData};
 use crate::shape::{Dimensions, TensorType};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -42,16 +42,41 @@ impl AsTensorData for StringTensorData {
 
     fn dimensions(&self) -> Dimensions {
         fn dimensions_with_shape(shape: &[usize]) -> Dimensions {
-            Dimensions::Image {
-                channels: shape[1].try_into().unwrap(),
-                width: Some(shape[2]),
-                height: Some(shape[3]),
+            Dimensions::String {
+                max_length: Some(shape[1]),
             }
         }
 
         match self {
             Self::I64(v) => dimensions_with_shape(v.shape()),
             Self::F32(v) => dimensions_with_shape(v.shape()),
+        }
+    }
+}
+
+impl TryFrom<Tensor> for Tensor<StringTensorData> {
+    type Error = anyhow::Error;
+
+    fn try_from(value: Tensor) -> Result<Self, Self::Error> {
+        match value.data {
+            TensorData::Dynamic(DynamicTensorData::F32(data)) => {
+                if let [batch_size, num_classes] = *data.shape() {
+                    let data = StringTensorData::F32(data.into_shape((batch_size, num_classes))?);
+                    Ok(Tensor {
+                        name: value.name,
+                        data,
+                    })
+                } else {
+                    bail!("Unexpected classes shape yet: {:?}", data.shape())
+                }
+            }
+            TensorData::String(data) => Ok(Tensor {
+                name: value.name,
+                data,
+            }),
+            _ => {
+                bail!("Unsupported shape yet: {:?}", value.shape())
+            }
         }
     }
 }

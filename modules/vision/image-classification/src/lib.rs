@@ -21,7 +21,7 @@ pub trait IpnisImageClassification {
         P: Send + Sync + AsRef<Path>,
         TIter: Send + IntoIterator<Item = (String, T)>,
         T: 'static + Send + Sync + GenericImageView + ToTensor,
-        F: Send + FnOnce(Tensor<ClassTensorData>) -> Fut,
+        F: Send + FnOnce(ClassTensorData) -> Fut,
         Fut: Send + Future<Output = Result<()>>;
 }
 
@@ -40,20 +40,22 @@ where
         P: Send + Sync + AsRef<Path>,
         TIter: Send + IntoIterator<Item = (String, T)>,
         T: 'static + Send + Sync + GenericImageView + ToTensor,
-        F: Send + FnOnce(Tensor<ClassTensorData>) -> Fut,
+        F: Send + FnOnce(ClassTensorData) -> Fut,
         Fut: Send + Future<Output = Result<()>>,
     {
         let inputs = inputs
             .into_iter()
             .map(|(k, v)| (k, Box::new(v) as Box<dyn ToTensor + Send + Sync>))
             .collect();
+
         self.call_raw(model, &inputs, |mut outputs| async move {
             if outputs.len() != 1 {
                 bail!("Unexpected outputs: Expected 1, Given {}", outputs.len());
             }
             let output = outputs.pop().unwrap();
 
-            f_outputs(output.try_into()?).await
+            let output: Tensor<_> = output.try_into()?;
+            f_outputs(output.data).await
         })
         .await
     }

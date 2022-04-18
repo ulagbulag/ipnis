@@ -121,7 +121,7 @@ impl IpnisRaw for Engine {
         let inputs: Vec<_> = model
             .inputs
             .iter()
-            .map(|shape| match inputs.get(&shape.name) {
+            .map(|shape| match inputs.get(shape.name.as_ref()) {
                 Some(input) => input.to_tensor(shape),
                 None => bail!("No such input: {}", &shape.name),
             })
@@ -139,7 +139,7 @@ impl IpnisRaw for Engine {
             .iter()
             .zip(outputs)
             .map(|(shape, output)| Tensor {
-                name: shape.name.clone(),
+                name: shape.name.to_string(),
                 data: DynamicTensorData::F32(output.to_owned().into_shared()).into(),
             })
             .collect();

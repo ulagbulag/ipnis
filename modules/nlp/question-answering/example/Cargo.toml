@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0"
 avusen = { path = "../../../../../avusen" }
+ipnis-modules-question-answering = { path = ".." }
 ipnis-runtime = { path = "../../../../runtime" }
 tokio = { version = "1.17", features = ["full"] }
 ureq = "2.4"
