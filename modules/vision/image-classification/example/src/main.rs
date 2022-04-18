@@ -6,14 +6,12 @@ use std::{
 };
 
 use anyhow::Result;
+use ipnis_modules_image_classification::IpnisImageClassification;
 use ipnis_runtime::{
     common::{
         image::io::Reader as ImageReader,
-        onnxruntime::{
-            ndarray::{self, s},
-            tensor::ndarray_tensor::NdArrayTensor,
-        },
-        tensor::{dynamic::DynamicTensorData, TensorData, ToTensor},
+        onnxruntime::{ndarray, tensor::ndarray_tensor::NdArrayTensor},
+        tensor::class::ClassTensorData,
         IpnisRaw,
     },
     Engine,
@@ -24,7 +22,7 @@ async fn main() -> Result<()> {
     let engine = Engine::new(Default::default())?;
 
     let model = engine
-        .get_model(
+        .get_model_from_local_file(
             "squeezenet",
             // NOTE: The example uses SqueezeNet 1.0 (ONNX version: 1.3, Opset version: 8).
             //       Obtain it with:
@@ -33,33 +31,42 @@ async fn main() -> Result<()> {
         )
         .await?;
 
-    let image = ImageReader::open("cat.jpg")?.decode()?;
     let images = vec![(
+        // name
         "data".to_string(),
-        Box::new(image) as Box<dyn ToTensor + Send + Sync>,
-    )]
-    .into_iter()
-    .collect();
+        // value
+        ImageReader::open("cat.jpg")?.decode()?,
+    )];
 
     engine
-        .call_raw(&model, &images, |outputs| async move {
+        .call_raw_image_classification(&model, images, |output| async move {
             let labels = get_imagenet_labels()?;
 
             // Downloaded model does not have a softmax as final layer; call softmax on second axis
             // and iterate on resulting probabilities, creating an index to later access labels.
-            if let TensorData::Dynamic(DynamicTensorData::F32(output)) = &outputs[0].data {
-                let mut probabilities: Vec<(usize, f32)> = output
-                    .slice(s![0usize, ..])
-                    .softmax(ndarray::Axis(0))
-                    .iter()
-                    .copied()
+            if let ClassTensorData::F32(data) = &output.data {
+                let data = data.softmax(ndarray::Axis(1));
+                let probabilities: Vec<(usize, Vec<_>)> = data
+                    .rows()
+                    .into_iter()
+                    .map(|row| {
+                        // Sort probabilities so highest is at beginning of vector.
+                        let mut row: Vec<_> = row.into_owned().into_iter().enumerate().collect();
+                        row.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+                        row
+                    })
                     .enumerate()
-                    .collect::<Vec<_>>();
-                // Sort probabilities so highest is at beginning of vector.
-                probabilities.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+                    .collect();
 
-                for (idx, score) in probabilities.iter().take(5) {
-                    println!("Score for class [{}] =  {}", &labels[*idx], score);
+                for (batch, classes) in probabilities {
+                    for (idx, score) in classes.iter().take(5) {
+                        println!(
+                            "Score for class [{}] of image {}th = {}",
+                            &labels[*idx],
+                            batch + 1,
+                            score,
+                        );
+                    }
                 }
             }
 

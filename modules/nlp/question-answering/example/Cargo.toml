@@ -1,5 +1,5 @@
 [package]
-name = "ipnis-modules-image-classification-example"
+name = "ipnis-modules-question-answering-example"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,7 +8,6 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0"
 avusen = { path = "../../../../../avusen" }
-ipnis-modules-image-classification = { path = ".." }
 ipnis-runtime = { path = "../../../../runtime" }
 tokio = { version = "1.17", features = ["full"] }
 ureq = "2.4"

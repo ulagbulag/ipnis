@@ -1,3 +1,4 @@
+pub mod class;
 pub mod dynamic;
 pub mod image;
 pub mod string;
@@ -21,9 +22,9 @@ impl ToTensor for Box<dyn ToTensor + Send + Sync> {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Tensor {
+pub struct Tensor<Data = TensorData> {
     pub name: String,
-    pub data: TensorData,
+    pub data: Data,
 }
 
 #[cfg(feature = "onnxruntime")]
@@ -33,6 +34,16 @@ impl<'t> AsOrtTensorDyn<'t> for Tensor {
         'm: 't,
     {
         self.data.as_ort_tensor_dyn(session)
+    }
+}
+
+impl AsTensorData for Tensor {
+    fn ty(&self) -> TensorType {
+        self.data.ty()
+    }
+
+    fn dimensions(&self) -> Dimensions {
+        self.data.dimensions()
     }
 }
 
@@ -52,7 +63,7 @@ impl ToTensor for Tensor {
 }
 
 impl Tensor {
-    fn shape(&self) -> Shape {
+    pub fn shape(&self) -> Shape {
         Shape {
             name: self.name.clone(),
             ty: self.data.ty(),
@@ -64,6 +75,7 @@ impl Tensor {
 #[derive(Clone, Debug, PartialEq)]
 pub enum TensorData {
     Dynamic(self::dynamic::DynamicTensorData),
+    Class(self::class::ClassTensorData),
     Image(self::image::ImageTensorData),
     String(self::string::StringTensorData),
 }
@@ -76,16 +88,18 @@ impl<'t> AsOrtTensorDyn<'t> for TensorData {
     {
         match self {
             Self::Dynamic(v) => v.as_ort_tensor_dyn(session),
+            Self::Class(v) => v.as_ort_tensor_dyn(session),
             Self::Image(v) => v.as_ort_tensor_dyn(session),
             Self::String(v) => v.as_ort_tensor_dyn(session),
         }
     }
 }
 
-impl TensorData {
+impl AsTensorData for TensorData {
     fn ty(&self) -> TensorType {
         match self {
             Self::Dynamic(v) => v.ty(),
+            Self::Class(v) => v.ty(),
             Self::Image(v) => v.ty(),
             Self::String(v) => v.ty(),
         }
@@ -94,8 +108,15 @@ impl TensorData {
     fn dimensions(&self) -> Dimensions {
         match self {
             Self::Dynamic(v) => v.dimensions(),
+            Self::Class(v) => v.dimensions(),
             Self::Image(v) => v.dimensions(),
             Self::String(v) => v.dimensions(),
         }
     }
+}
+
+pub trait AsTensorData {
+    fn ty(&self) -> TensorType;
+
+    fn dimensions(&self) -> Dimensions;
 }

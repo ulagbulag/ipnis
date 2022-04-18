@@ -21,8 +21,9 @@ impl Shape {
             ty,
             dimensions: {
                 match dimensions[..] {
-                    [Some(1), Some(num_labels)] | [Some(1), Some(num_labels), Some(1), Some(1)] => {
-                        Dimensions::Label { num_labels }
+                    [Some(1), Some(num_classes)]
+                    | [Some(1), Some(num_classes), Some(1), Some(1)] => {
+                        Dimensions::Class { num_classes }
                     }
                     [Some(1), Some(channels), width, height] => Dimensions::Image {
                         channels: channels.try_into()?,
@@ -71,13 +72,13 @@ impl TryFrom<&'_ Output> for Shape {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Dimensions {
     Unknown(Vec<Option<usize>>),
+    Class {
+        num_classes: usize,
+    },
     Image {
         channels: ImageChannel,
         width: Option<usize>,
         height: Option<usize>,
-    },
-    Label {
-        num_labels: usize,
     },
     String {
         max_length: Option<usize>,
@@ -100,6 +101,15 @@ impl Dimensions {
         match (self, child) {
             // Unknown
             (Self::Unknown(parent), Self::Unknown(child)) => parent == child,
+            // Class
+            (
+                Self::Class {
+                    num_classes: parent_num_classes,
+                },
+                Self::Class {
+                    num_classes: child_num_classes,
+                },
+            ) => parent_num_classes == child_num_classes,
             // Image
             (
                 Self::Image {
@@ -117,16 +127,7 @@ impl Dimensions {
                     && try_contains(parent_width, child_width)
                     && try_contains(parent_height, child_height)
             }
-            // Label
-            (
-                Self::Label {
-                    num_labels: parent_num_labels,
-                },
-                Self::Label {
-                    num_labels: child_num_labels,
-                },
-            ) => parent_num_labels == child_num_labels,
-            // Label
+            // String
             (
                 Self::String {
                     max_length: parent_max_length,
@@ -143,12 +144,12 @@ impl Dimensions {
     fn to_vec(&self) -> Vec<Option<usize>> {
         match self {
             Dimensions::Unknown(v) => v.clone(),
+            Dimensions::Class { num_classes } => vec![Some(1), Some(*num_classes)],
             Dimensions::Image {
                 channels,
                 width,
                 height,
             } => vec![Some(1), Some((*channels).into()), *width, *height],
-            Dimensions::Label { num_labels } => vec![Some(1), Some(*num_labels)],
             Dimensions::String { max_length } => vec![Some(1), *max_length],
         }
     }

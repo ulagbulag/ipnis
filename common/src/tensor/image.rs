@@ -7,7 +7,7 @@ use onnxruntime::{
     tensor::{AsOrtTensorDyn, OrtTensorDyn},
 };
 
-use super::{Tensor, TensorData, ToTensor};
+use super::{AsTensorData, Tensor, TensorData, ToTensor};
 use crate::shape::{Dimensions, Shape, TensorType};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -35,15 +35,15 @@ impl<'t> AsOrtTensorDyn<'t> for ImageTensorData {
     }
 }
 
-impl ImageTensorData {
-    pub(super) fn ty(&self) -> TensorType {
+impl AsTensorData for ImageTensorData {
+    fn ty(&self) -> TensorType {
         match self {
             Self::U8(_) => TensorType::U8,
             Self::F32(_) => TensorType::F32,
         }
     }
 
-    pub(super) fn dimensions(&self) -> Dimensions {
+    fn dimensions(&self) -> Dimensions {
         fn dimensions_with_shape(shape: &[usize]) -> Dimensions {
             Dimensions::Image {
                 channels: shape[1].try_into().unwrap(),

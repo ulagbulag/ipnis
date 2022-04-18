@@ -31,7 +31,7 @@ pub trait Ipnis {
 
 #[async_trait]
 pub trait IpnisRaw {
-    async fn get_model<N, P>(&self, name: N, path: P) -> Result<Model<P>>
+    async fn get_model_from_local_file<N, P>(&self, name: N, path: P) -> Result<Model<P>>
     where
         N: Send + Sync + AsRef<str>,
         P: Send + Sync + AsRef<Path>;

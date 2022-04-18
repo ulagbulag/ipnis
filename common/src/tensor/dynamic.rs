@@ -4,7 +4,7 @@ use onnxruntime::{
     tensor::{AsOrtTensorDyn, OrtTensorDyn},
 };
 
-use super::TensorData;
+use super::{AsTensorData, TensorData};
 use crate::shape::{Dimensions, TensorType};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -32,15 +32,15 @@ impl<'t> AsOrtTensorDyn<'t> for DynamicTensorData {
     }
 }
 
-impl DynamicTensorData {
-    pub(super) fn ty(&self) -> TensorType {
+impl AsTensorData for DynamicTensorData {
+    fn ty(&self) -> TensorType {
         match self {
             Self::U8(_) => TensorType::U8,
             Self::F32(_) => TensorType::F32,
         }
     }
 
-    pub(super) fn dimensions(&self) -> Dimensions {
+    fn dimensions(&self) -> Dimensions {
         fn dimensions_with_shape(shape: &[usize]) -> Dimensions {
             Dimensions::Unknown(shape.iter().map(|e| Some(*e)).collect())
         }

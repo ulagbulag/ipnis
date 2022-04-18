@@ -1,3 +1,5 @@
+pub extern crate ipnis_common as common;
+
 use std::{future::Future, path::Path};
 
 use anyhow::Result;
@@ -20,7 +22,7 @@ impl Ipnis for IpnisClient {
 
 #[async_trait]
 impl IpnisRaw for IpnisClient {
-    async fn get_model<N, P>(&self, name: N, path: P) -> Result<Model<P>>
+    async fn get_model_from_local_file<N, P>(&self, name: N, path: P) -> Result<Model<P>>
     where
         N: Send + Sync + AsRef<str>,
         P: Send + Sync + AsRef<Path>,
