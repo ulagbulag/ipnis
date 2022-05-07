@@ -50,7 +50,8 @@ where
 
         self.call_raw(model, &inputs, |mut outputs| async move {
             if outputs.len() != 1 {
-                bail!("Unexpected outputs: Expected 1, Given {}", outputs.len());
+                let outputs = outputs.len();
+                bail!("Unexpected outputs: Expected 1, Given {outputs}");
             }
             let output = outputs.pop().unwrap();
 

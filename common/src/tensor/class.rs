@@ -65,7 +65,8 @@ impl TryFrom<Tensor> for Tensor<ClassTensorData> {
                         data,
                     })
                 } else {
-                    bail!("Unexpected classes shape yet: {:?}", data.shape())
+                    let shape = data.shape();
+                    bail!("Unexpected classes shape yet: {shape:?}")
                 }
             }
             TensorData::Class(data) => Ok(Tensor {
@@ -73,7 +74,8 @@ impl TryFrom<Tensor> for Tensor<ClassTensorData> {
                 data,
             }),
             _ => {
-                bail!("Unsupported shape yet: {:?}", value.shape())
+                let shape = value.shape();
+                bail!("Unsupported shape yet: {shape:?}")
             }
         }
     }

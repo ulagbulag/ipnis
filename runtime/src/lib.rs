@@ -123,7 +123,10 @@ impl IpnisRaw for Engine {
             .iter()
             .map(|shape| match inputs.get(shape.name.as_ref()) {
                 Some(input) => input.to_tensor(shape),
-                None => bail!("No such input: {}", &shape.name),
+                None => {
+                    let name = &shape.name;
+                    bail!("No such input: {name}")
+                }
             })
             .collect::<Result<_>>()?;
 

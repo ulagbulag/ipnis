@@ -31,7 +31,7 @@ async fn main() -> Result<()> {
     };
 
     let input = Input {
-        question: "Where do I live?".into(),
+        question: "What is my name?".into(),
         context: "My name is Sarah and I live in London.".into(),
     };
     let inputs = &[input];
@@ -39,7 +39,8 @@ async fn main() -> Result<()> {
     engine
         .call_raw_question_answering(&model, &tokenizer, inputs, |output| async move {
             for (batch, answer) in output.into_iter().enumerate() {
-                println!("Answer for data {}th = {}", batch + 1, answer);
+                let batch = batch + 1;
+                println!("Answer for data {batch}th = {answer}");
             }
 
             Ok(())

@@ -107,7 +107,8 @@ where
 
         self.call_raw(model, &inputs, |mut outputs| async move {
             if outputs.len() != 2 {
-                bail!("Unexpected outputs: Expected 2, Given {}", outputs.len());
+                let outputs = outputs.len();
+                bail!("Unexpected outputs: Expected 2, Given {outputs}");
             }
 
             let end_logits: Tensor<StringTensorData> = outputs.pop().unwrap().try_into()?;
@@ -127,11 +128,11 @@ where
                         .collect::<Vec<_>>();
                     f_outputs(answer).await
                 }
-                _ => bail!(
-                    "Unexpected StringTensorData: {:?}, {:?}",
-                    start_logits.shape(),
-                    end_logits.shape(),
-                ),
+                _ => {
+                    let start_logits = start_logits.shape();
+                    let end_logits = end_logits.shape();
+                    bail!("Unexpected StringTensorData: {start_logits:?}, {end_logits:?}")
+                }
             }
         })
         .await

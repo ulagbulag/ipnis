@@ -118,11 +118,7 @@ impl ToTensor for TensorData {
                 data: self.to_owned(),
             })
         } else {
-            bail!(
-                "Shape mismatched: Expected {expected:?}, but Given {given:?}",
-                expected = parent,
-                given = child,
-            )
+            bail!("Shape mismatched: Expected {parent:?}, but Given {child:?}")
         }
     }
 }

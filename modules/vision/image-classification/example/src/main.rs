@@ -83,7 +83,7 @@ fn get_imagenet_labels() -> Result<Vec<String>> {
     let labels_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("synset.txt");
     if !labels_path.exists() {
         let url = "https://s3.amazonaws.com/onnx-model-zoo/synset.txt";
-        println!("Downloading {:?} to {:?}...", url, labels_path);
+        println!("Downloading {url:?} to {labels_path:?}...");
         let resp = ureq::get(url)
             .timeout(Duration::from_secs(180)) // 3 minutes
             .call()?;
@@ -93,7 +93,7 @@ fn get_imagenet_labels() -> Result<Vec<String>> {
             .header("Content-Length")
             .and_then(|s| s.parse::<usize>().ok())
             .unwrap();
-        println!("Downloading {} bytes...", len);
+        println!("Downloading {len} bytes...");
 
         let mut reader = resp.into_reader();
 

@@ -176,7 +176,7 @@ impl TryFrom<TensorElementDataType> for TensorType {
             TensorElementDataType::I64 => Ok(Self::I64),
             TensorElementDataType::U8 => Ok(Self::U8),
             TensorElementDataType::F32 => Ok(Self::F32),
-            _ => bail!("Unsupported TensorType: {:?}", value),
+            _ => bail!("Unsupported TensorType: {value:?}"),
         }
     }
 }
