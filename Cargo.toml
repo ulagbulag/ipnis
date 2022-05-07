@@ -1,0 +1,13 @@
+[workspace]
+resolver = "2"
+members = [
+    "api",
+    "common",
+    "modules/nlp/question-answering",
+    "modules/nlp/question-answering/example",
+    "modules/vision/image-classification",
+    "modules/vision/image-classification/example",
+    "pallet",
+    "runtime",
+]
+default-members = []
