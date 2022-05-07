@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "api",
+    "api/onnxruntime",
     "common",
     "modules/nlp/question-answering",
     "modules/nlp/question-answering/example",

@@ -1,0 +1,17 @@
+[package]
+name = "ipnis-api-onnxruntime"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+default = []
+image = ["ipnis-common/image"]
+
+[dependencies]
+ipis = { git = "https://github.com/ulagbulag-village/ipis.git", features = [
+    "derive",
+] }
+ipdis-api = { git = "https://github.com/ulagbulag-village/ipdis.git" }
+ipnis-common = { path = "../../common", features = ["onnxruntime"] }

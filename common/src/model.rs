@@ -1,5 +1,4 @@
 use bytecheck::CheckBytes;
-use ipis::core::value::text::Text;
 use rkyv::{Archive, Deserialize, Serialize};
 
 use crate::tensor::shape::Shape;
@@ -10,7 +9,6 @@ use crate::tensor::shape::Shape;
 ",))]
 #[archive_attr(derive(CheckBytes, Debug, PartialEq))]
 pub struct Model<P> {
-    pub name: Text,
     pub path: P,
     pub inputs: Vec<Shape>,
     pub outputs: Vec<Shape>,

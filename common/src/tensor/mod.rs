@@ -4,12 +4,14 @@ pub mod dynamic;
 pub mod shape;
 pub mod ty;
 
+use bytecheck::CheckBytes;
 use ipis::core::anyhow::{self, bail};
 #[cfg(feature = "onnxruntime")]
 use onnxruntime::{
     session::Session,
     tensor::{AsOrtTensorDyn, OrtTensorDyn},
 };
+use rkyv::{Archive, Deserialize, Serialize};
 
 use self::{dimension::Dimensions, shape::Shape, ty::TensorType};
 
@@ -23,7 +25,11 @@ impl ToTensor for Box<dyn ToTensor + Send + Sync> {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Archive, Serialize, Deserialize)]
+#[archive(bound(archive = "
+    <Data as Archive>::Archived: ::core::fmt::Debug + PartialEq,
+",))]
+#[archive_attr(derive(CheckBytes, Debug, PartialEq))]
 pub struct Tensor<Data = TensorData> {
     pub name: String,
     pub data: Data,
@@ -68,7 +74,8 @@ where
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Archive, Serialize, Deserialize)]
+#[archive_attr(derive(CheckBytes, Debug, PartialEq))]
 pub enum TensorData {
     Dynamic(self::dynamic::DynamicTensorData),
     Class(self::class::ClassTensorData),
