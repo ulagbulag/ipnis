@@ -17,6 +17,12 @@ impl AsRef<IpiisClient> for IpnisServer {
     }
 }
 
+impl AsRef<IpiisServer> for IpnisServer {
+    fn as_ref(&self) -> &IpiisServer {
+        self.client.as_ref().as_ref()
+    }
+}
+
 impl<'a> Infer<'a> for IpnisServer {
     type GenesisArgs = <IpiisServer as Infer<'a>>::GenesisArgs;
     type GenesisResult = Self;
@@ -40,7 +46,8 @@ impl IpnisServer {
     pub async fn run(&self) {
         let client = self.client.clone();
 
-        self.client.ipdis.ipiis.run(client, Self::handle).await
+        let runtime: &IpiisServer = self.client.as_ref().as_ref();
+        runtime.run(client, Self::handle).await
     }
 
     async fn handle(

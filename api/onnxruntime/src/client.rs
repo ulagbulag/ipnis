@@ -42,6 +42,16 @@ where
     }
 }
 
+impl<IpiisClient> AsRef<::ipnis_common::ipiis_api::server::IpiisServer>
+    for IpnisClientInner<IpiisClient>
+where
+    IpiisClient: AsRef<::ipnis_common::ipiis_api::server::IpiisServer>,
+{
+    fn as_ref(&self) -> &::ipnis_common::ipiis_api::server::IpiisServer {
+        self.ipdis.as_ref()
+    }
+}
+
 impl<'a, IpiisClient> Infer<'a> for IpnisClientInner<IpiisClient>
 where
     IpiisClient: Infer<'a, GenesisResult = IpiisClient>,
