@@ -5,4 +5,16 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+default = ["image"]
+
 [dependencies]
+ipis = { git = "https://github.com/ulagbulag-village/ipis.git", features = [
+    "derive",
+] }
+
+bytecheck = "0.6"
+image = { version = "0.24", optional = true }
+onnxruntime = { git = "https://github.com/ulagbulag-village/onnxruntime-rs.git", optional = true }
+rkyv = { version = "0.7", features = ["archive_be"] }
+zerocopy = "0.6"
