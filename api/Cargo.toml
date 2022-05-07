@@ -7,8 +7,10 @@ edition = "2021"
 
 [features]
 default = ["image", "onnxruntime"]
-image = ["ipnis-api-onnxruntime?/image"]
-onnxruntime = ["ipnis-api-onnxruntime"]
+image = ["ipnis-api-onnxruntime?/image", "ipnis-common/image"]
+onnxruntime = ["ipnis-api-onnxruntime", "ipnis-common/onnxruntime"]
 
 [dependencies]
+ipis = { git = "https://github.com/ulagbulag-village/ipis" }
 ipnis-api-onnxruntime = { path = "./onnxruntime", optional = true }
+ipnis-common = { path = "../common" }

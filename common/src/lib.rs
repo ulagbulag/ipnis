@@ -25,7 +25,6 @@ use ipis::{
         account::GuaranteeSigned,
         anyhow::{bail, Result},
     },
-    path::Path,
 };
 use rkyv::{Archive, Deserialize, Serialize};
 
@@ -38,7 +37,7 @@ use self::{
 pub trait Ipnis {
     async fn call<T, F, Fut>(
         &self,
-        model: &Model<Path>,
+        model: &Model,
         inputs: &HashMap<String, T>,
     ) -> Result<Vec<Tensor>>
     where
@@ -62,12 +61,12 @@ pub trait Ipnis {
         self.call_raw(model, inputs).await
     }
 
-    async fn call_raw(&self, model: &Model<Path>, inputs: Vec<Tensor>) -> Result<Vec<Tensor>>;
+    async fn call_raw(&self, model: &Model, inputs: Vec<Tensor>) -> Result<Vec<Tensor>>;
 }
 
 #[async_trait]
 impl Ipnis for IpiisClient {
-    async fn call_raw(&self, model: &Model<Path>, inputs: Vec<Tensor>) -> Result<Vec<Tensor>> {
+    async fn call_raw(&self, model: &Model, inputs: Vec<Tensor>) -> Result<Vec<Tensor>> {
         // next target
         let target = self.account_primary()?;
 
@@ -97,10 +96,7 @@ pub type Request = GuaranteeSigned<RequestType>;
 #[derive(Clone, Debug, PartialEq, Archive, Serialize, Deserialize)]
 #[archive_attr(derive(CheckBytes, Debug, PartialEq))]
 pub enum RequestType {
-    Call {
-        model: Model<Path>,
-        inputs: Vec<Tensor>,
-    },
+    Call { model: Model, inputs: Vec<Tensor> },
 }
 
 #[derive(Clone, Debug, PartialEq, Archive, Serialize, Deserialize)]
