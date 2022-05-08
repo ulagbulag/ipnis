@@ -5,6 +5,8 @@ pub extern crate image;
 pub extern crate ipiis_api;
 #[cfg(feature = "onnxruntime")]
 pub extern crate onnxruntime;
+#[cfg(feature = "rust_tokenizers")]
+pub extern crate rust_tokenizers;
 
 pub mod model;
 pub mod nlp;

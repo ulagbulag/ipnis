@@ -1,88 +1,51 @@
-pub extern crate rust_tokenizers;
-
 use ipis::{
     async_trait::async_trait,
     core::{
         anyhow::{bail, Result},
         ndarray,
-        value::array::Array,
     },
 };
 use ipnis_common::{
     model::Model,
-    nlp::tensor::StringTensorData,
-    tensor::{Tensor, TensorData, ToTensor},
+    nlp::{
+        input::{QAInputs, Tokenized},
+        tensor::StringTensorData,
+    },
+    rust_tokenizers,
+    tensor::Tensor,
     Ipnis,
 };
-use rust_tokenizers::tokenizer::TruncationStrategy;
 
-pub struct Input {
-    pub question: String,
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Outputs {
+    pub answers: Vec<Output>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Output {
+    pub query: String,
     pub context: String,
+    pub answer: String,
 }
 
 #[async_trait]
 pub trait IpnisQuestionAnswering: Ipnis {
-    async fn call_question_answering<'a, Tokenizer, Vocab, TIter>(
+    async fn call_question_answering<Tokenizer, Vocab>(
         &self,
         model: &Model,
         tokenizer: &Tokenizer,
-        inputs: TIter,
-    ) -> Result<Vec<String>>
+        inputs: QAInputs,
+    ) -> Result<Outputs>
     where
-        Tokenizer: ::rust_tokenizers::tokenizer::Tokenizer<Vocab> + Sync,
-        Vocab: ::rust_tokenizers::vocab::Vocab,
-        TIter: IntoIterator<Item = &'a Input> + Send,
+        Tokenizer: rust_tokenizers::tokenizer::Tokenizer<Vocab> + Sync,
+        Vocab: rust_tokenizers::vocab::Vocab,
     {
-        let inputs: Vec<_> = inputs.into_iter().collect();
-        let max_len = inputs
-            .iter()
-            .map(|input| input.question.len().max(input.context.len()))
-            .max()
-            .unwrap_or(0);
-
-        let input_ids: Vec<_> = inputs
-            .into_iter()
-            .map(|input| {
-                tokenizer.encode(
-                    &input.question,
-                    Some(&input.context),
-                    max_len,
-                    &TruncationStrategy::LongestFirst,
-                    0,
-                )
-            })
-            .map(|input| ndarray::Array::from(input.token_ids))
-            .map(|input| {
-                let length = input.len();
-                input.into_shape((1, length))
-            })
-            .collect::<Result<_, _>>()?;
-        let input_ids: Vec<_> = input_ids.iter().map(|input| input.view()).collect();
-        let input_ids = ndarray::concatenate(ndarray::Axis(0), &input_ids)?;
-
-        let attention_mask = {
-            let mut buf = input_ids.clone();
-            buf.fill(1);
-            buf
-        };
-
-        let inputs = vec![
-            (
-                "input_ids".to_string(),
-                Box::new(TensorData::from(StringTensorData::I64(Array(
-                    input_ids.clone().into(),
-                )))) as Box<dyn ToTensor + Send + Sync>,
-            ),
-            (
-                "attention_mask".to_string(),
-                Box::new(TensorData::from(StringTensorData::I64(Array(
-                    attention_mask.clone().into(),
-                )))) as Box<dyn ToTensor + Send + Sync>,
-            ),
-        ]
-        .into_iter()
-        .collect();
+        let Tokenized {
+            input_ids,
+            inputs,
+            inputs_str,
+            ..
+        } = inputs.tokenize(tokenizer)?;
 
         let mut outputs = self.call(model, &inputs).await?;
         if outputs.len() != 2 {
@@ -95,16 +58,21 @@ pub trait IpnisQuestionAnswering: Ipnis {
 
         match (&start_logits.data, &end_logits.data) {
             (StringTensorData::F32(start_logits), StringTensorData::F32(end_logits)) => {
-                let answer = find_answer(&input_ids, start_logits, end_logits);
-                Ok(answer
-                    .iter()
-                    .map(|row| {
-                        tokenizer
-                            .decode(row.as_slice().unwrap(), true, true)
-                            .trim()
-                            .to_string()
-                    })
-                    .collect())
+                let answers = find_answer(&input_ids, start_logits, end_logits);
+                Ok(Outputs {
+                    answers: inputs_str
+                        .into_iter()
+                        .zip(answers.iter())
+                        .map(|(input, answer)| Output {
+                            query: input.text_1,
+                            context: input.text_2.unwrap(),
+                            answer: tokenizer
+                                .decode(answer.as_slice().unwrap(), true, true)
+                                .trim()
+                                .to_string(),
+                        })
+                        .collect(),
+                })
             }
             _ => {
                 let start_logits = start_logits.shape();

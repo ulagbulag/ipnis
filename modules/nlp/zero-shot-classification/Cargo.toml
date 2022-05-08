@@ -1,5 +1,5 @@
 [package]
-name = "ipnis-modules-question-answering"
+name = "ipnis-modules-zero-shot-classification"
 version = "0.1.0"
 edition = "2021"
 
@@ -15,4 +15,7 @@ repository = "https://github.com/ulagbulag-village/ipnis"
 
 [dependencies]
 ipis = { git = "https://github.com/ulagbulag-village/ipis.git" }
-ipnis-common = { path = "../../../common", features = ["rust_tokenizers"] }
+ipnis-common = { path = "../../../common" }
+ipnis-modules-sequence-classification = { path = "../sequence-classification" }
+
+rust_tokenizers = "7.0"

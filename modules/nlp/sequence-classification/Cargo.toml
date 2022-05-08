@@ -1,5 +1,5 @@
 [package]
-name = "ipnis-modules-question-answering"
+name = "ipnis-modules-sequence-classification"
 version = "0.1.0"
 edition = "2021"
 

@@ -11,6 +11,8 @@ Belows are available modules:
 ### NLP
 
 * question-answering
+* sequence-classification
+* zero-shot-classification
 
 ### Vision
 
