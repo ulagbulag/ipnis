@@ -3,6 +3,14 @@ name = "ipnis-modules-image-classification-example"
 version = "0.1.0"
 edition = "2021"
 
+authors = ["Ho Kim <ho.kim@ulagbulag.io>"]
+description = "InterPlanetary Neural Interpretation Service"
+documentation = "https://docs.rs/ipnis"
+license = "MIT OR Apache-2.0"
+readme = "../../../../README.md"
+homepage = "https://ulagbulag.io/"
+repository = "https://github.com/ulagbulag-village/ipnis"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
