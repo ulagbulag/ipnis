@@ -52,6 +52,12 @@ where
     }
 }
 
+impl<IpiisClient> AsRef<IpdisClientInner<IpiisClient>> for IpnisClientInner<IpiisClient> {
+    fn as_ref(&self) -> &IpdisClientInner<IpiisClient> {
+        &self.ipdis
+    }
+}
+
 impl<'a, IpiisClient> Infer<'a> for IpnisClientInner<IpiisClient>
 where
     IpiisClient: Infer<'a, GenesisResult = IpiisClient>,
@@ -88,7 +94,7 @@ impl<IpiisClient> IpnisClientInner<IpiisClient> {
         })
     }
 
-    async fn load_session(&self, model: &Model) -> Result<Arc<Session>>
+    async fn load_session(&self, path: &Path) -> Result<Arc<Session>>
     where
         IpiisClient: Ipiis + Send + Sync,
     {
@@ -96,10 +102,10 @@ impl<IpiisClient> IpnisClientInner<IpiisClient> {
 
         // TODO: hibernate the least used sessions (caching)
 
-        match sessions.get(&model.path) {
+        match sessions.get(path) {
             Some(session) => Ok(session.clone()),
             None => {
-                let model_bytes = self.ipdis.get_raw(&model.path).await?;
+                let model_bytes = self.ipdis.get_raw(path).await?;
 
                 let session = self
                     .environment
@@ -108,7 +114,7 @@ impl<IpiisClient> IpnisClientInner<IpiisClient> {
                     .with_number_threads(self.config.number_threads.into())?
                     .with_model_from_memory(&model_bytes)?;
                 let session = Arc::new(session);
-                sessions.insert(model.path, session.clone());
+                sessions.insert(*path, session.clone());
 
                 Ok(session)
             }
@@ -125,7 +131,7 @@ where
     /// This method is thread-safe: https://github.com/microsoft/onnxruntime/issues/114#issuecomment-444725508
     async fn call_raw(&self, model: &Model, inputs: Vec<Tensor>) -> Result<Vec<Tensor>> {
         // load a model
-        let session = self.load_session(model).await?;
+        let session = self.load_session(&model.path).await?;
 
         // perform the inference
         let outputs: Vec<OrtOwnedTensor<f32, ndarray::IxDyn>> = session.run(&inputs)?;
@@ -142,5 +148,23 @@ where
             .collect();
 
         Ok(outputs)
+    }
+
+    async fn load_model(&self, path: &Path) -> Result<Model> {
+        let session = self.load_session(path).await?;
+
+        Ok(Model {
+            path: *path,
+            inputs: session
+                .inputs
+                .iter()
+                .map(TryInto::try_into)
+                .collect::<Result<_>>()?,
+            outputs: session
+                .outputs
+                .iter()
+                .map(TryInto::try_into)
+                .collect::<Result<_>>()?,
+        })
     }
 }

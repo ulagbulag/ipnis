@@ -61,6 +61,9 @@ impl IpnisServer {
             RequestType::Call { model, inputs } => Ok(Response::Call {
                 outputs: client.call_raw(&model, inputs).await?,
             }),
+            RequestType::LoadModel { path } => Ok(Response::LoadModel {
+                model: client.load_model(&path).await?,
+            }),
         }
     }
 }

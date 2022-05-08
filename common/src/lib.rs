@@ -11,7 +11,6 @@ pub mod nlp;
 pub mod tensor;
 pub mod vision;
 
-use core::future::Future;
 use std::collections::HashMap;
 
 use bytecheck::CheckBytes;
@@ -25,6 +24,7 @@ use ipis::{
         account::GuaranteeSigned,
         anyhow::{bail, Result},
     },
+    path::Path,
 };
 use rkyv::{Archive, Deserialize, Serialize};
 
@@ -35,15 +35,9 @@ use self::{
 
 #[async_trait]
 pub trait Ipnis {
-    async fn call<T, F, Fut>(
-        &self,
-        model: &Model,
-        inputs: &HashMap<String, T>,
-    ) -> Result<Vec<Tensor>>
+    async fn call<T>(&self, model: &Model, inputs: &HashMap<String, T>) -> Result<Vec<Tensor>>
     where
         T: Send + Sync + ToTensor,
-        F: Send + FnOnce(Vec<Tensor>) -> Fut,
-        Fut: Send + Future<Output = Result<()>>,
     {
         // collect inputs
         let inputs: Vec<_> = model
@@ -62,6 +56,8 @@ pub trait Ipnis {
     }
 
     async fn call_raw(&self, model: &Model, inputs: Vec<Tensor>) -> Result<Vec<Tensor>>;
+
+    async fn load_model(&self, path: &Path) -> Result<Model>;
 }
 
 #[async_trait]
@@ -89,6 +85,27 @@ impl Ipnis for IpiisClient {
         // unpack response
         Ok(outputs)
     }
+
+    async fn load_model(&self, path: &Path) -> Result<Model> {
+        // next target
+        let target = self.account_primary()?;
+
+        // pack request
+        let req = RequestType::LoadModel { path: *path };
+
+        // external call
+        let (model,) = external_call!(
+            account: self.account_me().account_ref(),
+            call: self
+                .call_permanent_deserialized(Opcode::TEXT, &target, req)
+                .await?,
+            response: Response => LoadModel,
+            items: { model },
+        );
+
+        // unpack response
+        Ok(model)
+    }
 }
 
 pub type Request = GuaranteeSigned<RequestType>;
@@ -97,10 +114,12 @@ pub type Request = GuaranteeSigned<RequestType>;
 #[archive_attr(derive(CheckBytes, Debug, PartialEq))]
 pub enum RequestType {
     Call { model: Model, inputs: Vec<Tensor> },
+    LoadModel { path: Path },
 }
 
 #[derive(Clone, Debug, PartialEq, Archive, Serialize, Deserialize)]
 #[archive_attr(derive(CheckBytes, Debug, PartialEq))]
 pub enum Response {
     Call { outputs: Vec<Tensor> },
+    LoadModel { model: Model },
 }

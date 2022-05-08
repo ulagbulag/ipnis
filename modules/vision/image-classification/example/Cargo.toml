@@ -6,3 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+ipis = { git = "https://github.com/ulagbulag-village/ipis.git" }
+ipdis-api = { git = "https://github.com/ulagbulag-village/ipdis.git" }
+ipdis-modules-gdown = { git = "https://github.com/ulagbulag-village/ipdis.git" }
+ipnis-api = { path = "../../../../api" }
+ipnis-modules-image-classification = { path = ".." }
+
+ureq = "2.4"

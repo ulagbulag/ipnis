@@ -11,4 +11,4 @@ members = [
     "pallet",
     "runtime",
 ]
-default-members = []
+default-members = ["runtime"]

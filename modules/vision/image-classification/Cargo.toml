@@ -6,3 +6,5 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+ipis = { git = "https://github.com/ulagbulag-village/ipis.git" }
+ipnis-common = { path = "../../../common", features = ["image"] }

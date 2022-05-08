@@ -85,7 +85,7 @@ impl ToTensor for DynamicImage {
 
         let image = match (width, height) {
             (Some(width), Some(height)) => {
-                Cow::Owned(self.resize(width as u32, height as u32, RESIZE_FILTER))
+                Cow::Owned(self.resize_exact(width as u32, height as u32, RESIZE_FILTER))
             }
             (Some(_), None) | (None, Some(_)) => bail!("scaling an image is not supported yet."),
             (None, None) => Cow::Borrowed(self),
