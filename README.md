@@ -7,7 +7,6 @@ cargo run --release --package ipnis-modules-{module}-example
 ```
 
 Belows are available modules:
-(TODO: downloading the .onnx models are not supported yet!)
 
 ### NLP
 
