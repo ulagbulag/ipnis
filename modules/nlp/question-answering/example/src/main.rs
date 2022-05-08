@@ -48,7 +48,7 @@ async fn main() -> Result<()> {
 
     // perform the inference
     let outputs = client
-        .call_raw_question_answering(&model, &tokenizer, inputs)
+        .call_question_answering(&model, &tokenizer, inputs)
         .await?;
 
     // show the result

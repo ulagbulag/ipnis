@@ -51,7 +51,7 @@ async fn main() -> Result<()> {
     )];
 
     // perform the inference
-    let outputs = client.call_raw_image_classification(&model, images).await?;
+    let outputs = client.call_image_classification(&model, images).await?;
 
     // NOTE: downloaded model does not have a softmax as final layer; call softmax on second
     // axis and iterate on resulting probabilities, creating an index to later access labels.

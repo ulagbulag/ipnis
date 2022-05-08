@@ -11,7 +11,7 @@ use ipnis_common::{
 
 #[async_trait]
 pub trait IpnisImageClassification: Ipnis {
-    async fn call_raw_image_classification<TIter, T>(
+    async fn call_image_classification<TIter, T>(
         &self,
         model: &Model,
         inputs: TIter,

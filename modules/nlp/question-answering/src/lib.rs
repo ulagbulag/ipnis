@@ -23,7 +23,7 @@ pub struct Input {
 
 #[async_trait]
 pub trait IpnisQuestionAnswering: Ipnis {
-    async fn call_raw_question_answering<'a, Tokenizer, Vocab, TIter>(
+    async fn call_question_answering<'a, Tokenizer, Vocab, TIter>(
         &self,
         model: &Model,
         tokenizer: &Tokenizer,
