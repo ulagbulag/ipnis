@@ -15,7 +15,7 @@ repository = "https://github.com/ulagbulag-village/ipnis"
 
 [dependencies]
 ipis = { git = "https://github.com/ulagbulag-village/ipis.git" }
-ipdis-api = { git = "https://github.com/ulagbulag-village/ipdis.git" }
-ipdis-modules-gdown = { git = "https://github.com/ulagbulag-village/ipdis.git" }
+ipsis-api = { git = "https://github.com/ulagbulag-village/ipsis.git" }
+ipsis-modules-gdown = { git = "https://github.com/ulagbulag-village/ipsis.git" }
 ipnis-api = { path = "../../../../api" }
 ipnis-modules-zero-shot-classification = { path = ".." }

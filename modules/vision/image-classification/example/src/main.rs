@@ -4,8 +4,6 @@ use std::{
     time::Duration,
 };
 
-use ipdis_api::client::IpdisClient;
-use ipdis_modules_gdown::IpdisGdown;
 use ipis::{
     core::{anyhow::Result, ndarray},
     env::Infer,
@@ -20,12 +18,14 @@ use ipnis_api::{
     },
 };
 use ipnis_modules_image_classification::IpnisImageClassification;
+use ipsis_api::client::IpsisClient;
+use ipsis_modules_gdown::IpsisGdown;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // create a client
     let client = IpnisClient::try_infer()?;
-    let storage: &IpdisClient = client.as_ref();
+    let storage: &IpsisClient = client.as_ref();
 
     // download a model (roberta.onnx)
     // NOTE: source: "https://media.githubusercontent.com/media/onnx/models/main/vision/classification/squeezenet/model/squeezenet1.1-7.onnx"

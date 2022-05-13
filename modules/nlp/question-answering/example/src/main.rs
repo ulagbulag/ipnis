@@ -1,5 +1,3 @@
-use ipdis_api::client::IpdisClient;
-use ipdis_modules_gdown::IpdisGdown;
 use ipis::{core::anyhow::Result, env::Infer, path::Path, tokio};
 use ipnis_api::{
     client::IpnisClient,
@@ -13,12 +11,14 @@ use ipnis_api::{
     },
 };
 use ipnis_modules_question_answering::IpnisQuestionAnswering;
+use ipsis_api::client::IpsisClient;
+use ipsis_modules_gdown::IpsisGdown;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // create a client
     let client = IpnisClient::try_infer()?;
-    let storage: &IpdisClient = client.as_ref();
+    let storage: &IpsisClient = client.as_ref();
 
     // download a model (deepset/roberta-base-squad2.onnx)
     // NOTE: you can generate manually from: "https://github.com/kerryeon/huggingface-onnx-tutorial.git"

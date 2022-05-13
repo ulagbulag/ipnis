@@ -1,6 +1,5 @@
 use std::{collections::HashMap, sync::Arc};
 
-use ipdis_api::{client::IpdisClientInner, common::Ipdis};
 use ipis::{
     async_trait::async_trait,
     core::{anyhow::Result, ndarray, value::array::Array},
@@ -15,13 +14,14 @@ use ipnis_common::{
     tensor::{dynamic::DynamicTensorData, Tensor},
     Ipnis,
 };
+use ipsis_api::{client::IpsisClientInner, common::Ipsis};
 
 use crate::config::ClientConfig;
 
 pub type IpnisClient = IpnisClientInner<::ipnis_common::ipiis_api::client::IpiisClient>;
 
 pub struct IpnisClientInner<IpiisClient> {
-    pub ipdis: IpdisClientInner<IpiisClient>,
+    pub ipsis: IpsisClientInner<IpiisClient>,
     config: ClientConfig,
     environment: Environment,
     /// ## Thread-safe
@@ -38,7 +38,7 @@ where
     IpiisClient: AsRef<::ipnis_common::ipiis_api::client::IpiisClient>,
 {
     fn as_ref(&self) -> &::ipnis_common::ipiis_api::client::IpiisClient {
-        self.ipdis.as_ref()
+        self.ipsis.as_ref()
     }
 }
 
@@ -48,13 +48,13 @@ where
     IpiisClient: AsRef<::ipnis_common::ipiis_api::server::IpiisServer>,
 {
     fn as_ref(&self) -> &::ipnis_common::ipiis_api::server::IpiisServer {
-        self.ipdis.as_ref()
+        self.ipsis.as_ref()
     }
 }
 
-impl<IpiisClient> AsRef<IpdisClientInner<IpiisClient>> for IpnisClientInner<IpiisClient> {
-    fn as_ref(&self) -> &IpdisClientInner<IpiisClient> {
-        &self.ipdis
+impl<IpiisClient> AsRef<IpsisClientInner<IpiisClient>> for IpnisClientInner<IpiisClient> {
+    fn as_ref(&self) -> &IpsisClientInner<IpiisClient> {
+        &self.ipsis
     }
 }
 
@@ -67,23 +67,23 @@ where
     type GenesisResult = Self;
 
     fn try_infer() -> Result<Self> {
-        IpdisClientInner::try_infer().and_then(Self::with_ipdis_client)
+        IpsisClientInner::try_infer().and_then(Self::with_ipsis_client)
     }
 
     fn genesis(
         args: <Self as Infer<'a>>::GenesisArgs,
     ) -> Result<<Self as Infer<'a>>::GenesisResult> {
-        IpdisClientInner::genesis(args).and_then(Self::with_ipdis_client)
+        IpsisClientInner::genesis(args).and_then(Self::with_ipsis_client)
     }
 }
 
 impl<IpiisClient> IpnisClientInner<IpiisClient> {
-    pub fn with_ipdis_client(ipdis: IpdisClientInner<IpiisClient>) -> Result<Self> {
+    pub fn with_ipsis_client(ipsis: IpsisClientInner<IpiisClient>) -> Result<Self> {
         let config = ClientConfig::try_infer()?;
         let log_level = config.log_level;
 
         Ok(Self {
-            ipdis,
+            ipsis,
             config,
             environment: Environment::builder()
                 .with_name("ipnis")
@@ -105,7 +105,7 @@ impl<IpiisClient> IpnisClientInner<IpiisClient> {
         match sessions.get(path) {
             Some(session) => Ok(session.clone()),
             None => {
-                let model_bytes = self.ipdis.get_raw(path).await?;
+                let model_bytes = self.ipsis.get_raw(path).await?;
 
                 let session = self
                     .environment
