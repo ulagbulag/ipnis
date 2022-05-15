@@ -8,20 +8,19 @@ use ipis::{
     tokio::sync::Mutex,
 };
 use ipnis_common::{
-    ipiis_api::common::Ipiis,
     model::Model,
     onnxruntime::{environment::Environment, session::Session, tensor::OrtOwnedTensor},
     tensor::{dynamic::DynamicTensorData, Tensor},
     Ipnis,
 };
-use ipsis_api::{client::IpsisClientInner, common::Ipsis};
+use ipsis_common::Ipsis;
 
 use crate::config::ClientConfig;
 
-pub type IpnisClient = IpnisClientInner<::ipnis_common::ipiis_api::client::IpiisClient>;
+pub type IpnisClient = IpnisClientInner<::ipiis_api::client::IpiisClient>;
 
 pub struct IpnisClientInner<IpiisClient> {
-    pub ipsis: IpsisClientInner<IpiisClient>,
+    pub ipiis: IpiisClient,
     config: ClientConfig,
     environment: Environment,
     /// ## Thread-safe
@@ -32,29 +31,21 @@ pub struct IpnisClientInner<IpiisClient> {
     sessions: Mutex<HashMap<Path, Arc<Session>>>,
 }
 
-impl<IpiisClient> AsRef<::ipnis_common::ipiis_api::client::IpiisClient>
-    for IpnisClientInner<IpiisClient>
+impl<IpiisClient> AsRef<::ipiis_api::client::IpiisClient> for IpnisClientInner<IpiisClient>
 where
-    IpiisClient: AsRef<::ipnis_common::ipiis_api::client::IpiisClient>,
+    IpiisClient: AsRef<::ipiis_api::client::IpiisClient>,
 {
-    fn as_ref(&self) -> &::ipnis_common::ipiis_api::client::IpiisClient {
-        self.ipsis.as_ref()
+    fn as_ref(&self) -> &::ipiis_api::client::IpiisClient {
+        self.ipiis.as_ref()
     }
 }
 
-impl<IpiisClient> AsRef<::ipnis_common::ipiis_api::server::IpiisServer>
-    for IpnisClientInner<IpiisClient>
+impl<IpiisClient> AsRef<::ipiis_api::server::IpiisServer> for IpnisClientInner<IpiisClient>
 where
-    IpiisClient: AsRef<::ipnis_common::ipiis_api::server::IpiisServer>,
+    IpiisClient: AsRef<::ipiis_api::server::IpiisServer>,
 {
-    fn as_ref(&self) -> &::ipnis_common::ipiis_api::server::IpiisServer {
-        self.ipsis.as_ref()
-    }
-}
-
-impl<IpiisClient> AsRef<IpsisClientInner<IpiisClient>> for IpnisClientInner<IpiisClient> {
-    fn as_ref(&self) -> &IpsisClientInner<IpiisClient> {
-        &self.ipsis
+    fn as_ref(&self) -> &::ipiis_api::server::IpiisServer {
+        self.ipiis.as_ref()
     }
 }
 
@@ -67,23 +58,23 @@ where
     type GenesisResult = Self;
 
     fn try_infer() -> Result<Self> {
-        IpsisClientInner::try_infer().and_then(Self::with_ipsis_client)
+        IpiisClient::try_infer().and_then(Self::with_ipiis_client)
     }
 
     fn genesis(
         args: <Self as Infer<'a>>::GenesisArgs,
     ) -> Result<<Self as Infer<'a>>::GenesisResult> {
-        IpsisClientInner::genesis(args).and_then(Self::with_ipsis_client)
+        IpiisClient::genesis(args).and_then(Self::with_ipiis_client)
     }
 }
 
 impl<IpiisClient> IpnisClientInner<IpiisClient> {
-    pub fn with_ipsis_client(ipsis: IpsisClientInner<IpiisClient>) -> Result<Self> {
+    pub fn with_ipiis_client(ipiis: IpiisClient) -> Result<Self> {
         let config = ClientConfig::try_infer()?;
         let log_level = config.log_level;
 
         Ok(Self {
-            ipsis,
+            ipiis,
             config,
             environment: Environment::builder()
                 .with_name("ipnis")
@@ -96,7 +87,7 @@ impl<IpiisClient> IpnisClientInner<IpiisClient> {
 
     async fn load_session(&self, path: &Path) -> Result<Arc<Session>>
     where
-        IpiisClient: Ipiis + Send + Sync,
+        IpiisClient: Ipsis + Send + Sync,
     {
         let mut sessions = self.sessions.lock().await;
 
@@ -105,7 +96,7 @@ impl<IpiisClient> IpnisClientInner<IpiisClient> {
         match sessions.get(path) {
             Some(session) => Ok(session.clone()),
             None => {
-                let model_bytes = self.ipsis.get_raw(path).await?;
+                let model_bytes = self.ipiis.get_raw(path).await?;
 
                 let session = self
                     .environment
@@ -125,7 +116,7 @@ impl<IpiisClient> IpnisClientInner<IpiisClient> {
 #[async_trait]
 impl<IpiisClient> Ipnis for IpnisClientInner<IpiisClient>
 where
-    IpiisClient: Ipiis + Send + Sync,
+    IpiisClient: Ipsis + Send + Sync,
 {
     /// ## Thread-safe
     /// This method is thread-safe: https://github.com/microsoft/onnxruntime/issues/114#issuecomment-444725508

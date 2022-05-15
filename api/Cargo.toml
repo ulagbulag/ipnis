@@ -20,5 +20,6 @@ onnxruntime = ["ipnis-api-onnxruntime", "ipnis-common/onnxruntime"]
 
 [dependencies]
 ipis = { git = "https://github.com/ulagbulag-village/ipis" }
+ipiis-api = { git = "https://github.com/ulagbulag-village/ipiis.git" }
 ipnis-api-onnxruntime = { path = "./onnxruntime", optional = true }
 ipnis-common = { path = "../common" }

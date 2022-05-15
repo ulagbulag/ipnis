@@ -1,6 +1,6 @@
 use ipis::{core::anyhow::Result, env::Infer, path::Path, tokio};
 use ipnis_api::{
-    client::IpnisClient,
+    client::IpnisClientInner,
     common::{
         nlp::input::QAInputs,
         rust_tokenizers::{
@@ -17,8 +17,8 @@ use ipsis_modules_gdown::IpsisGdown;
 #[tokio::main]
 async fn main() -> Result<()> {
     // create a client
-    let client = IpnisClient::try_infer()?;
-    let storage: &IpsisClient = client.as_ref();
+    let client = IpnisClientInner::<IpsisClient>::try_infer()?;
+    let storage: &IpsisClient = &client.ipiis;
 
     // download a model (deepset/roberta-base-squad2.onnx)
     // NOTE: you can generate manually from: "https://github.com/kerryeon/huggingface-onnx-tutorial.git"

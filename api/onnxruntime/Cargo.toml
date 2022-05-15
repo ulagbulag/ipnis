@@ -21,5 +21,6 @@ image = ["ipnis-common/image"]
 ipis = { git = "https://github.com/ulagbulag-village/ipis.git", features = [
     "derive",
 ] }
-ipsis-api = { git = "https://github.com/ulagbulag-village/ipsis.git" }
+ipiis-api = { git = "https://github.com/ulagbulag-village/ipiis.git" }
 ipnis-common = { path = "../../common", features = ["onnxruntime"] }
+ipsis-common = { git = "https://github.com/ulagbulag-village/ipsis.git" }

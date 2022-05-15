@@ -20,7 +20,7 @@ default = []
 ipis = { git = "https://github.com/ulagbulag-village/ipis.git", features = [
     "derive",
 ] }
-ipiis-api = { git = "https://github.com/ulagbulag-village/ipiis" }
+ipiis-common = { git = "https://github.com/ulagbulag-village/ipiis" }
 
 bytecheck = "0.6"
 image = { version = "0.24", optional = true }

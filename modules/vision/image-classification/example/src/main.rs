@@ -11,7 +11,7 @@ use ipis::{
     tokio,
 };
 use ipnis_api::{
-    client::IpnisClient,
+    client::IpnisClientInner,
     common::{
         image::io::Reader as ImageReader, onnxruntime::tensor::ndarray_tensor::NdArrayTensor,
         tensor::class::ClassTensorData, Ipnis,
@@ -24,8 +24,8 @@ use ipsis_modules_gdown::IpsisGdown;
 #[tokio::main]
 async fn main() -> Result<()> {
     // create a client
-    let client = IpnisClient::try_infer()?;
-    let storage: &IpsisClient = client.as_ref();
+    let client = IpnisClientInner::<IpsisClient>::try_infer()?;
+    let storage: &IpsisClient = &client.ipiis;
 
     // download a model (roberta.onnx)
     // NOTE: source: "https://media.githubusercontent.com/media/onnx/models/main/vision/classification/squeezenet/model/squeezenet1.1-7.onnx"

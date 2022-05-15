@@ -2,7 +2,6 @@
 
 #[cfg(feature = "image")]
 pub extern crate image;
-pub extern crate ipiis_api;
 #[cfg(feature = "onnxruntime")]
 pub extern crate onnxruntime;
 #[cfg(feature = "rust_tokenizers")]
@@ -16,10 +15,7 @@ pub mod vision;
 use std::collections::HashMap;
 
 use bytecheck::CheckBytes;
-use ipiis_api::{
-    client::IpiisClient,
-    common::{external_call, opcode::Opcode, Ipiis},
-};
+use ipiis_common::{external_call, Ipiis};
 use ipis::{
     async_trait::async_trait,
     core::{
@@ -63,7 +59,11 @@ pub trait Ipnis {
 }
 
 #[async_trait]
-impl Ipnis for IpiisClient {
+impl<IpiisClient> Ipnis for IpiisClient
+where
+    IpiisClient: Ipiis + Send + Sync,
+    <IpiisClient as Ipiis>::Opcode: Default,
+{
     async fn call_raw(&self, model: &Model, inputs: Vec<Tensor>) -> Result<Vec<Tensor>> {
         // next target
         let target = self.account_primary()?;
@@ -77,7 +77,7 @@ impl Ipnis for IpiisClient {
         // external call
         let (outputs,) = external_call!(
             call: self
-                .call_permanent_deserialized(Opcode::TEXT, &target, req)
+                .call_permanent_deserialized(Default::default(), &target, req)
                 .await?,
             response: Response => Call,
             items: { outputs },
@@ -97,7 +97,7 @@ impl Ipnis for IpiisClient {
         // external call
         let (model,) = external_call!(
             call: self
-                .call_permanent_deserialized(Opcode::TEXT, &target, req)
+                .call_permanent_deserialized(Default::default(), &target, req)
                 .await?,
             response: Response => LoadModel,
             items: { model },

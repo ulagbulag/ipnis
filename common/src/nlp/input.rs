@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use ipis::{core::ndarray, itertools::Itertools};
+use ipis::core::ndarray;
 
 use crate::tensor::ToTensor;
 
@@ -23,7 +23,10 @@ impl QAInputs {
         tokenize(tokenizer, self.into_vec())
     }
 
+    #[cfg(feature = "rust_tokenizers")]
     fn into_vec(self) -> Vec<GenericInput> {
+        use ipis::itertools::Itertools;
+
         self.query
             .into_iter()
             .cartesian_product(self.context.into_iter())
@@ -54,7 +57,10 @@ impl SCInputs {
         tokenize(tokenizer, self.into_vec())
     }
 
+    #[cfg(feature = "rust_tokenizers")]
     fn into_vec(self) -> Vec<GenericInput> {
+        use ipis::itertools::Itertools;
+
         self.query
             .into_iter()
             .cartesian_product(self.context.into_iter())
