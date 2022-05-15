@@ -76,7 +76,6 @@ impl Ipnis for IpiisClient {
 
         // external call
         let (outputs,) = external_call!(
-            account: self.account_me().account_ref(),
             call: self
                 .call_permanent_deserialized(Opcode::TEXT, &target, req)
                 .await?,
@@ -97,7 +96,6 @@ impl Ipnis for IpiisClient {
 
         // external call
         let (model,) = external_call!(
-            account: self.account_me().account_ref(),
             call: self
                 .call_permanent_deserialized(Opcode::TEXT, &target, req)
                 .await?,
