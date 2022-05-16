@@ -93,7 +93,7 @@ where
     Tokenizer: ::rust_tokenizers::tokenizer::Tokenizer<Vocab>,
     Vocab: ::rust_tokenizers::vocab::Vocab,
 {
-    use ipis::core::value::array::Array;
+    use ipis::core::{anyhow::bail, value::array::Array};
     use rust_tokenizers::tokenizer::TruncationStrategy;
 
     use crate::{nlp::tensor::StringTensorData, tensor::TensorData};
@@ -109,29 +109,56 @@ where
         .max()
         .unwrap_or(0);
 
-    let input_ids: Vec<_> = inputs_str
+    let inputs_1: Vec<_> = inputs_str
         .iter()
-        .map(|input| {
-            tokenizer.encode(
-                &input.text_1,
-                input.text_2.as_deref(),
-                max_len,
-                &TruncationStrategy::LongestFirst,
-                0,
-            )
+        .map(|input| input.text_1.as_str())
+        .collect();
+    let inputs_2: Vec<_> = inputs_str
+        .iter()
+        .filter_map(|input| input.text_2.as_deref())
+        .collect();
+
+    if !inputs_2.is_empty() && inputs_1.len() != inputs_2.len() {
+        bail!("failed to parse the text pairs");
+    }
+
+    let input_ids = if inputs_2.is_empty() {
+        tokenizer.encode_list(&inputs_1, max_len, &TruncationStrategy::LongestFirst, 0)
+    } else {
+        let inputs_pair: Vec<_> = inputs_1.into_iter().zip(inputs_2.into_iter()).collect();
+
+        tokenizer.encode_pair_list(&inputs_pair, max_len, &TruncationStrategy::LongestFirst, 0)
+    };
+    let input_lens: Vec<_> = input_ids
+        .iter()
+        .map(|input| input.token_ids.len())
+        .collect();
+    let max_len = input_lens.iter().max().copied().unwrap_or(0);
+
+    let input_ids: Vec<_> = input_ids
+        .into_iter()
+        .map(|input| input.token_ids)
+        .map(|mut input| {
+            input.extend([0].repeat(max_len - input.len()));
+            input
         })
-        .map(|input| ndarray::Array::from(input.token_ids))
+        .map(ndarray::Array::from)
         .map(|input| {
             let length = input.len();
             input.into_shape((1, length))
         })
         .collect::<Result<_, _>>()?;
+
     let input_ids: Vec<_> = input_ids.iter().map(|input| input.view()).collect();
     let input_ids = ndarray::concatenate(ndarray::Axis(0), &input_ids)?;
 
     let attention_mask = {
         let mut buf = input_ids.clone();
         buf.fill(1);
+
+        for (mut row, len) in buf.rows_mut().into_iter().zip(input_lens.iter().copied()) {
+            row.slice_mut(ndarray::s!(len..)).fill(0);
+        }
         buf
     };
 
