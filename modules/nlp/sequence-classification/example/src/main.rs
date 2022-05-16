@@ -47,6 +47,7 @@ async fn main() -> Result<()> {
     let inputs = SCInputs {
         query: vec![
             "This example is mobile.".into(),
+            "This example is a mobile.".into(),
         ],
         context: vec![
             "Last week I upgraded my iOS version and ever since then my phone has been overheating whenever I use your app.".into(),
