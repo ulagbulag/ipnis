@@ -58,7 +58,7 @@ pub trait IpnisZeroShotClassification: IpnisSequenceClassification {
 
         // perform the sequence classification
         let outputs = self
-            .call_sequence_classification(model, tokenizer, inputs, labels)
+            .call_sequence_classification_raw(model, tokenizer, inputs, labels)
             .await?;
 
         // collect probabilities

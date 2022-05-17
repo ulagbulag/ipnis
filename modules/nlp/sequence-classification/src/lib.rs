@@ -11,6 +11,7 @@ use ipnis_common::{
     model::Model,
     nlp::{
         input::{SCInputs, Tokenized},
+        output::SentenceLabel,
         tensor::StringTensorData,
     },
     onnxruntime::tensor::ndarray_tensor::NdArrayTensor,
@@ -23,11 +24,23 @@ use crate::labels::Labels;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Outputs {
-    pub answers: Vec<Output>,
+    pub answers: Vec<RawOutput>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Output {
+    pub query: String,
+    pub context: String,
+    pub label: Option<SentenceLabel>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct RawOutputs {
+    pub answers: Vec<RawOutput>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct RawOutput {
     pub query: String,
     pub context: String,
     pub prob_contradiction: Option<f32>,
@@ -44,6 +57,24 @@ pub trait IpnisSequenceClassification: Ipnis {
         inputs: SCInputs,
         labels: Labels,
     ) -> Result<Outputs>
+    where
+        Tokenizer: rust_tokenizers::tokenizer::Tokenizer<Vocab> + Sync,
+        Vocab: rust_tokenizers::vocab::Vocab,
+    {
+        let outputs = self
+            .call_sequence_classification_raw(model, tokenizer, inputs, labels)
+            .await?;
+
+        todo!()
+    }
+
+    async fn call_sequence_classification_raw<Tokenizer, Vocab>(
+        &self,
+        model: &Model,
+        tokenizer: &Tokenizer,
+        inputs: SCInputs,
+        labels: Labels,
+    ) -> Result<RawOutputs>
     where
         Tokenizer: rust_tokenizers::tokenizer::Tokenizer<Vocab> + Sync,
         Vocab: rust_tokenizers::vocab::Vocab,
@@ -82,7 +113,7 @@ pub trait IpnisSequenceClassification: Ipnis {
                 // execute softmax
                 let probs = logits.softmax(ndarray::Axis(1));
 
-                Ok(Outputs {
+                Ok(RawOutputs {
                     answers: inputs_str
                         .into_iter()
                         .zip(probs.rows().into_iter())
@@ -94,7 +125,7 @@ pub trait IpnisSequenceClassification: Ipnis {
                             let prob_entailment = labels.entailment.and_then(|_| probs.next());
                             let prob_neutral = labels.neutral.and_then(|_| probs.next());
 
-                            Output {
+                            RawOutput {
                                 query: input.text_1,
                                 context: input.text_2.unwrap(),
                                 prob_contradiction,

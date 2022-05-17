@@ -60,7 +60,7 @@ async fn main() -> Result<()> {
 
     // perform the inference
     let outputs = client
-        .call_sequence_classification(&model, &tokenizer, inputs, logits)
+        .call_sequence_classification_raw(&model, &tokenizer, inputs, logits)
         .await?;
 
     // show the result
