@@ -24,7 +24,7 @@ use ipsis_modules_gdown::IpsisGdown;
 #[tokio::main]
 async fn main() -> Result<()> {
     // create a client
-    let client = IpnisClientInner::<IpsisClient>::try_infer()?;
+    let client = IpnisClientInner::<IpsisClient>::try_infer().await?;
     let storage: &IpsisClient = &client.ipiis;
 
     // download a model (roberta.onnx)

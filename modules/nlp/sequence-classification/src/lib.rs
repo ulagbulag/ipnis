@@ -5,6 +5,7 @@ use ipis::{
     core::{
         anyhow::{bail, Result},
         ndarray,
+        ordered_float::OrderedFloat,
     },
 };
 use ipnis_common::{
@@ -24,7 +25,7 @@ use crate::labels::Labels;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Outputs {
-    pub answers: Vec<RawOutput>,
+    pub answers: Vec<Output>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -43,9 +44,9 @@ pub struct RawOutputs {
 pub struct RawOutput {
     pub query: String,
     pub context: String,
-    pub prob_contradiction: Option<f32>,
-    pub prob_entailment: Option<f32>,
-    pub prob_neutral: Option<f32>,
+    pub prob_contradiction: Option<OrderedFloat<f32>>,
+    pub prob_entailment: Option<OrderedFloat<f32>>,
+    pub prob_neutral: Option<OrderedFloat<f32>>,
 }
 
 #[async_trait]
@@ -65,7 +66,36 @@ pub trait IpnisSequenceClassification: Ipnis {
             .call_sequence_classification_raw(model, tokenizer, inputs, labels)
             .await?;
 
-        todo!()
+        Ok(Outputs {
+            answers: outputs
+                .answers
+                .into_iter()
+                .map(|output| {
+                    let probs = [
+                        output.prob_contradiction,
+                        output.prob_entailment,
+                        output.prob_neutral,
+                    ];
+
+                    Output {
+                        query: output.query,
+                        context: output.context,
+                        label: probs
+                            .into_iter()
+                            .enumerate()
+                            .max_by_key(|(_, prob)| *prob)
+                            .and_then(|(idx, prob)| {
+                                prob.map(|_| match idx {
+                                    0 => SentenceLabel::Contradiction,
+                                    1 => SentenceLabel::Entailment,
+                                    2 => SentenceLabel::Neutral,
+                                    _ => unreachable!(),
+                                })
+                            }),
+                    }
+                })
+                .collect(),
+        })
     }
 
     async fn call_sequence_classification_raw<Tokenizer, Vocab>(
@@ -120,10 +150,16 @@ pub trait IpnisSequenceClassification: Ipnis {
                         .map(|(input, probs)| {
                             let mut probs = probs.into_iter().copied();
 
-                            let prob_contradiction =
-                                labels.contradiction.and_then(|_| probs.next());
-                            let prob_entailment = labels.entailment.and_then(|_| probs.next());
-                            let prob_neutral = labels.neutral.and_then(|_| probs.next());
+                            let prob_contradiction = labels
+                                .contradiction
+                                .and_then(|_| probs.next())
+                                .map(OrderedFloat);
+                            let prob_entailment = labels
+                                .entailment
+                                .and_then(|_| probs.next())
+                                .map(OrderedFloat);
+                            let prob_neutral =
+                                labels.neutral.and_then(|_| probs.next()).map(OrderedFloat);
 
                             RawOutput {
                                 query: input.text_1,

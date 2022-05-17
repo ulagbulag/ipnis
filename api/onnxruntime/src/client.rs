@@ -4,6 +4,7 @@ use ipis::{
     async_trait::async_trait,
     core::{anyhow::Result, ndarray, value::array::Array},
     env::Infer,
+    futures::TryFutureExt,
     path::Path,
     tokio::sync::Mutex,
 };
@@ -49,28 +50,34 @@ where
     }
 }
 
+#[async_trait]
 impl<'a, IpiisClient> Infer<'a> for IpnisClientInner<IpiisClient>
 where
-    IpiisClient: Infer<'a, GenesisResult = IpiisClient>,
+    Self: Send,
+    IpiisClient: Infer<'a, GenesisResult = IpiisClient> + Send,
     <IpiisClient as Infer<'a>>::GenesisArgs: Sized,
 {
     type GenesisArgs = <IpiisClient as Infer<'a>>::GenesisArgs;
     type GenesisResult = Self;
 
-    fn try_infer() -> Result<Self> {
-        IpiisClient::try_infer().and_then(Self::with_ipiis_client)
+    async fn try_infer() -> Result<Self> {
+        IpiisClient::try_infer()
+            .and_then(Self::with_ipiis_client)
+            .await
     }
 
-    fn genesis(
+    async fn genesis(
         args: <Self as Infer<'a>>::GenesisArgs,
     ) -> Result<<Self as Infer<'a>>::GenesisResult> {
-        IpiisClient::genesis(args).and_then(Self::with_ipiis_client)
+        IpiisClient::genesis(args)
+            .and_then(Self::with_ipiis_client)
+            .await
     }
 }
 
 impl<IpiisClient> IpnisClientInner<IpiisClient> {
-    pub fn with_ipiis_client(ipiis: IpiisClient) -> Result<Self> {
-        let config = ClientConfig::try_infer()?;
+    pub async fn with_ipiis_client(ipiis: IpiisClient) -> Result<Self> {
+        let config = ClientConfig::try_infer().await?;
         let log_level = config.log_level;
 
         Ok(Self {

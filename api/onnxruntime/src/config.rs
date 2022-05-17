@@ -1,4 +1,4 @@
-use ipis::{core::anyhow::Result, env::Infer};
+use ipis::{async_trait::async_trait, core::anyhow::Result, env::Infer};
 use ipnis_common::onnxruntime::{GraphOptimizationLevel, LoggingLevel};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -18,11 +18,12 @@ impl Default for ClientConfig {
     }
 }
 
+#[async_trait]
 impl<'a> Infer<'a> for ClientConfig {
     type GenesisArgs = ();
     type GenesisResult = Self;
 
-    fn try_infer() -> Result<Self>
+    async fn try_infer() -> Result<Self>
     where
         Self: Sized,
     {
@@ -30,7 +31,9 @@ impl<'a> Infer<'a> for ClientConfig {
         Ok(Self::default())
     }
 
-    fn genesis((): <Self as Infer<'a>>::GenesisArgs) -> Result<<Self as Infer<'a>>::GenesisResult> {
+    async fn genesis(
+        (): <Self as Infer<'a>>::GenesisArgs,
+    ) -> Result<<Self as Infer<'a>>::GenesisResult> {
         Ok(Self::default())
     }
 }

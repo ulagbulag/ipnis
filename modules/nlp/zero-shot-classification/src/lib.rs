@@ -2,7 +2,10 @@ pub extern crate ipnis_modules_sequence_classification as sequence_classificatio
 
 use ipis::{
     async_trait::async_trait,
-    core::anyhow::{bail, Result},
+    core::{
+        anyhow::{bail, Result},
+        ordered_float::OrderedFloat,
+    },
 };
 use ipnis_common::{model::Model, nlp::input::SCInputs, rust_tokenizers};
 use ipnis_modules_sequence_classification::{labels::Labels, IpnisSequenceClassification};
@@ -16,7 +19,7 @@ pub struct Outputs {
 pub struct Output {
     pub query: String,
     pub context: String,
-    pub prob: f32,
+    pub prob: OrderedFloat<f32>,
 }
 
 #[async_trait]
