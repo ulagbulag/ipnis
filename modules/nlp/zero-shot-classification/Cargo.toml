@@ -16,6 +16,6 @@ repository = "https://github.com/ulagbulag-village/ipnis"
 [dependencies]
 ipis = { git = "https://github.com/ulagbulag-village/ipis.git" }
 ipnis-common = { path = "../../../common" }
-ipnis-modules-sequence-classification = { path = "../sequence-classification" }
+ipnis-modules-text-classification = { path = "../text-classification" }
 
 rust_tokenizers = "7.0"

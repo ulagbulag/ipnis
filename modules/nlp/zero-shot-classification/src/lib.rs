@@ -1,5 +1,3 @@
-pub extern crate ipnis_modules_sequence_classification as sequence_classification;
-
 use ipis::{
     async_trait::async_trait,
     core::{
@@ -8,7 +6,7 @@ use ipis::{
     },
 };
 use ipnis_common::{model::Model, nlp::input::SCInputs, rust_tokenizers};
-use ipnis_modules_sequence_classification::{labels::Labels, IpnisSequenceClassification};
+use ipnis_modules_text_classification::{labels::Labels, IpnisTextClassification};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Outputs {
@@ -23,7 +21,7 @@ pub struct Output {
 }
 
 #[async_trait]
-pub trait IpnisZeroShotClassification: IpnisSequenceClassification {
+pub trait IpnisZeroShotClassification: IpnisTextClassification {
     async fn call_zero_shot_classification<Tokenizer, Vocab>(
         &self,
         model: &Model,
@@ -61,7 +59,7 @@ pub trait IpnisZeroShotClassification: IpnisSequenceClassification {
 
         // perform the sequence classification
         let outputs = self
-            .call_sequence_classification_raw(model, tokenizer, inputs, labels)
+            .call_text_classification_raw(model, tokenizer, inputs, labels)
             .await?;
 
         // collect probabilities
@@ -79,4 +77,4 @@ pub trait IpnisZeroShotClassification: IpnisSequenceClassification {
     }
 }
 
-impl<T: IpnisSequenceClassification> IpnisZeroShotClassification for T {}
+impl<T: IpnisTextClassification> IpnisZeroShotClassification for T {}

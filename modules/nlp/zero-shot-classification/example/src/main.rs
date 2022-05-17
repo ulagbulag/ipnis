@@ -10,9 +10,8 @@ use ipnis_api::{
         Ipnis,
     },
 };
-use ipnis_modules_zero_shot_classification::{
-    sequence_classification::labels::Labels, IpnisZeroShotClassification,
-};
+use ipnis_modules_text_classification::labels::Labels;
+use ipnis_modules_zero_shot_classification::IpnisZeroShotClassification;
 use ipsis_api::client::IpsisClient;
 use ipsis_modules_gdown::IpsisGdown;
 

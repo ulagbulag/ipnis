@@ -12,7 +12,7 @@ use ipnis_common::{
     model::Model,
     nlp::{
         input::{SCInputs, Tokenized},
-        output::SentenceLabel,
+        output::TextLabel,
         tensor::StringTensorData,
     },
     onnxruntime::tensor::ndarray_tensor::NdArrayTensor,
@@ -32,7 +32,7 @@ pub struct Outputs {
 pub struct Output {
     pub query: String,
     pub context: String,
-    pub label: Option<SentenceLabel>,
+    pub label: Option<TextLabel>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -50,8 +50,8 @@ pub struct RawOutput {
 }
 
 #[async_trait]
-pub trait IpnisSequenceClassification: Ipnis {
-    async fn call_sequence_classification<Tokenizer, Vocab>(
+pub trait IpnisTextClassification: Ipnis {
+    async fn call_text_classification<Tokenizer, Vocab>(
         &self,
         model: &Model,
         tokenizer: &Tokenizer,
@@ -63,7 +63,7 @@ pub trait IpnisSequenceClassification: Ipnis {
         Vocab: rust_tokenizers::vocab::Vocab,
     {
         let outputs = self
-            .call_sequence_classification_raw(model, tokenizer, inputs, labels)
+            .call_text_classification_raw(model, tokenizer, inputs, labels)
             .await?;
 
         Ok(Outputs {
@@ -86,9 +86,9 @@ pub trait IpnisSequenceClassification: Ipnis {
                             .max_by_key(|(_, prob)| *prob)
                             .and_then(|(idx, prob)| {
                                 prob.map(|_| match idx {
-                                    0 => SentenceLabel::Contradiction,
-                                    1 => SentenceLabel::Entailment,
-                                    2 => SentenceLabel::Neutral,
+                                    0 => TextLabel::Contradiction,
+                                    1 => TextLabel::Entailment,
+                                    2 => TextLabel::Neutral,
                                     _ => unreachable!(),
                                 })
                             }),
@@ -98,7 +98,7 @@ pub trait IpnisSequenceClassification: Ipnis {
         })
     }
 
-    async fn call_sequence_classification_raw<Tokenizer, Vocab>(
+    async fn call_text_classification_raw<Tokenizer, Vocab>(
         &self,
         model: &Model,
         tokenizer: &Tokenizer,
@@ -180,4 +180,4 @@ pub trait IpnisSequenceClassification: Ipnis {
     }
 }
 
-impl<T: Ipnis> IpnisSequenceClassification for T {}
+impl<T: Ipnis> IpnisTextClassification for T {}

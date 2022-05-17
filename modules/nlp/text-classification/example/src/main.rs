@@ -10,7 +10,7 @@ use ipnis_api::{
         Ipnis,
     },
 };
-use ipnis_modules_sequence_classification::{labels::Labels, IpnisSequenceClassification};
+use ipnis_modules_text_classification::{labels::Labels, IpnisTextClassification};
 use ipsis_api::client::IpsisClient;
 use ipsis_modules_gdown::IpsisGdown;
 
@@ -60,7 +60,7 @@ async fn main() -> Result<()> {
 
     // perform the inference
     let outputs = client
-        .call_sequence_classification_raw(&model, &tokenizer, inputs, logits)
+        .call_text_classification_raw(&model, &tokenizer, inputs, logits)
         .await?;
 
     // show the result

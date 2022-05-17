@@ -18,4 +18,5 @@ ipis = { git = "https://github.com/ulagbulag-village/ipis.git" }
 ipsis-api = { git = "https://github.com/ulagbulag-village/ipsis.git" }
 ipsis-modules-gdown = { git = "https://github.com/ulagbulag-village/ipsis.git" }
 ipnis-api = { path = "../../../../api" }
+ipnis-modules-text-classification = { path = "../../text-classification" }
 ipnis-modules-zero-shot-classification = { path = ".." }
