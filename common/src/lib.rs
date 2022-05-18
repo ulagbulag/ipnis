@@ -62,11 +62,10 @@ pub trait Ipnis {
 impl<IpiisClient> Ipnis for IpiisClient
 where
     IpiisClient: Ipiis + Send + Sync,
-    <IpiisClient as Ipiis>::Opcode: Default,
 {
     async fn call_raw(&self, model: &Model, inputs: Vec<Tensor>) -> Result<Vec<Tensor>> {
         // next target
-        let target = self.account_primary()?;
+        let target = self.get_account_primary(KIND.as_ref()).await?;
 
         // pack request
         let req = RequestType::Call {
@@ -77,7 +76,7 @@ where
         // external call
         let (outputs,) = external_call!(
             call: self
-                .call_permanent_deserialized(Default::default(), &target, req)
+                .call_permanent_deserialized(&target, req)
                 .await?,
             response: Response => Call,
             items: { outputs },
@@ -89,7 +88,7 @@ where
 
     async fn load_model(&self, path: &Path) -> Result<Model> {
         // next target
-        let target = self.account_primary()?;
+        let target = self.get_account_primary(KIND.as_ref()).await?;
 
         // pack request
         let req = RequestType::LoadModel { path: *path };
@@ -97,7 +96,7 @@ where
         // external call
         let (model,) = external_call!(
             call: self
-                .call_permanent_deserialized(Default::default(), &target, req)
+                .call_permanent_deserialized(&target, req)
                 .await?,
             response: Response => LoadModel,
             items: { model },
@@ -122,4 +121,10 @@ pub enum RequestType {
 pub enum Response {
     Call { outputs: Vec<Tensor> },
     LoadModel { model: Model },
+}
+
+::ipis::lazy_static::lazy_static! {
+    pub static ref KIND: Option<::ipis::core::value::hash::Hash> = Some(
+        ::ipis::core::value::hash::Hash::with_str("__ipis__ipnis__"),
+    );
 }
