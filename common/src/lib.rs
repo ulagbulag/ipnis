@@ -1,5 +1,3 @@
-#![feature(more_qualified_paths)]
-
 #[cfg(feature = "image")]
 pub extern crate image;
 #[cfg(feature = "onnxruntime")]
