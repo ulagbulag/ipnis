@@ -6,7 +6,7 @@ use ipis::{
     env::Infer,
     futures::TryFutureExt,
     path::Path,
-    tokio::sync::Mutex,
+    tokio::{io::AsyncReadExt, sync::Mutex},
 };
 use ipnis_common::{
     model::Model,
@@ -103,7 +103,14 @@ impl<IpiisClient> IpnisClientInner<IpiisClient> {
         match sessions.get(path) {
             Some(session) => Ok(session.clone()),
             None => {
-                let model_bytes = self.ipiis.get_raw(path).await?;
+                let model_bytes = {
+                    let mut recv = self.ipiis.get_raw(path).await?;
+                    let mut buf = Vec::with_capacity(path.len.try_into()?);
+
+                    recv.read_u64().await?;
+                    recv.read_to_end(&mut buf).await?;
+                    buf
+                };
 
                 let session = self
                     .environment

@@ -1,4 +1,5 @@
 use bytecheck::CheckBytes;
+use ipis::core::signed::IsSigned;
 use rkyv::{Archive, Deserialize, Serialize};
 
 use crate::vision::channel::ImageChannel;
@@ -19,6 +20,8 @@ pub enum Dimensions {
         max_length: Option<usize>,
     },
 }
+
+impl IsSigned for Dimensions {}
 
 impl Dimensions {
     pub(super) fn contains(&self, child: &Self) -> bool {

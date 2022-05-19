@@ -14,17 +14,15 @@ pub mod vision;
 
 use std::collections::HashMap;
 
-use bytecheck::CheckBytes;
-use ipiis_common::{external_call, Ipiis};
+use ipiis_common::{define_io, external_call, Ipiis, ServerResult};
 use ipis::{
     async_trait::async_trait,
     core::{
-        account::GuaranteeSigned,
+        account::{GuaranteeSigned, GuarantorSigned},
         anyhow::{bail, Result},
     },
     path::Path,
 };
-use rkyv::{Archive, Deserialize, Serialize};
 
 use self::{
     model::Model,
@@ -67,19 +65,17 @@ where
         // next target
         let target = self.get_account_primary(KIND.as_ref()).await?;
 
-        // pack request
-        let req = RequestType::Call {
-            model: model.clone(),
-            inputs,
-        };
-
         // external call
         let (outputs,) = external_call!(
-            call: self
-                .call_permanent_deserialized(&target, req)
-                .await?,
-            response: Response => Call,
-            items: { outputs },
+            client: self,
+            target: KIND.as_ref() => &target,
+            request: crate::io => Call,
+            sign: self.sign(target, model.path)?,
+            inputs: {
+                model: model.clone(),
+                inputs: inputs,
+            },
+            outputs: { outputs, },
         );
 
         // unpack response
@@ -90,16 +86,14 @@ where
         // next target
         let target = self.get_account_primary(KIND.as_ref()).await?;
 
-        // pack request
-        let req = RequestType::LoadModel { path: *path };
-
         // external call
         let (model,) = external_call!(
-            call: self
-                .call_permanent_deserialized(&target, req)
-                .await?,
-            response: Response => LoadModel,
-            items: { model },
+            client: self,
+            target: KIND.as_ref() => &target,
+            request: crate::io => LoadModel,
+            sign: self.sign(target, *path)?,
+            inputs: { },
+            outputs: { model, },
         );
 
         // unpack response
@@ -107,20 +101,28 @@ where
     }
 }
 
-pub type Request = GuaranteeSigned<RequestType>;
-
-#[derive(Clone, Debug, PartialEq, Archive, Serialize, Deserialize)]
-#[archive_attr(derive(CheckBytes, Debug, PartialEq))]
-pub enum RequestType {
-    Call { model: Model, inputs: Vec<Tensor> },
-    LoadModel { path: Path },
-}
-
-#[derive(Clone, Debug, PartialEq, Archive, Serialize, Deserialize)]
-#[archive_attr(derive(CheckBytes, Debug, PartialEq))]
-pub enum Response {
-    Call { outputs: Vec<Tensor> },
-    LoadModel { model: Model },
+define_io! {
+    Call {
+        inputs: {
+            model: Model,
+            inputs: Vec<Tensor>,
+        },
+        input_sign: GuaranteeSigned<Path>,
+        outputs: {
+            outputs: Vec<Tensor>,
+        },
+        output_sign: GuarantorSigned<Path>,
+        generics: { },
+    },
+    LoadModel {
+        inputs: { },
+        input_sign: GuaranteeSigned<Path>,
+        outputs: {
+            model: Model,
+        },
+        output_sign: GuarantorSigned<Path>,
+        generics: { },
+    },
 }
 
 ::ipis::lazy_static::lazy_static! {

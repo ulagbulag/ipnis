@@ -1,4 +1,5 @@
 use bytecheck::CheckBytes;
+use ipis::core::signed::IsSigned;
 use rkyv::{Archive, Deserialize, Serialize};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Archive, Serialize, Deserialize)]
@@ -9,3 +10,5 @@ pub enum TextLabel {
     Entailment,
     Neutral,
 }
+
+impl IsSigned for TextLabel {}

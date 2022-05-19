@@ -1,5 +1,5 @@
 use bytecheck::CheckBytes;
-use ipis::path::Path;
+use ipis::{core::signed::IsSigned, path::Path};
 use rkyv::{Archive, Deserialize, Serialize};
 
 use crate::tensor::shape::Shape;
@@ -11,3 +11,5 @@ pub struct Model {
     pub inputs: Vec<Shape>,
     pub outputs: Vec<Shape>,
 }
+
+impl IsSigned for Model {}

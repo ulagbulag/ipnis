@@ -2,6 +2,7 @@ use bytecheck::CheckBytes;
 use ipis::core::{
     anyhow::{self, bail},
     ndarray,
+    signed::IsSigned,
     value::array::Array,
 };
 #[cfg(feature = "onnxruntime")]
@@ -22,6 +23,8 @@ pub enum StringTensorData {
     I64(Array<i64, ndarray::Ix2>),
     F32(Array<f32, ndarray::Ix2>),
 }
+
+impl IsSigned for StringTensorData {}
 
 impl From<StringTensorData> for TensorData {
     fn from(value: StringTensorData) -> Self {

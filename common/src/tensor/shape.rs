@@ -1,5 +1,5 @@
 use bytecheck::CheckBytes;
-use ipis::core::anyhow::Result;
+use ipis::core::{anyhow::Result, signed::IsSigned};
 use rkyv::{Archive, Deserialize, Serialize};
 #[cfg(feature = "onnxruntime")]
 use {
@@ -16,6 +16,8 @@ pub struct Shape {
     pub(crate) ty: TensorType,
     pub(crate) dimensions: Dimensions,
 }
+
+impl IsSigned for Shape {}
 
 impl Shape {
     pub fn new(

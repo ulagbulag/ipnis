@@ -1,5 +1,5 @@
 use bytecheck::CheckBytes;
-use ipis::core::{ndarray, value::array::Array};
+use ipis::core::{ndarray, signed::IsSigned, value::array::Array};
 #[cfg(feature = "onnxruntime")]
 use onnxruntime::{
     session::Session,
@@ -25,6 +25,8 @@ pub enum ImageTensorData {
     U8(Array<u8, ndarray::Ix4>),
     F32(Array<f32, ndarray::Ix4>),
 }
+
+impl IsSigned for ImageTensorData {}
 
 impl From<ImageTensorData> for TensorData {
     fn from(value: ImageTensorData) -> Self {

@@ -5,7 +5,10 @@ pub mod shape;
 pub mod ty;
 
 use bytecheck::CheckBytes;
-use ipis::core::anyhow::{self, bail};
+use ipis::core::{
+    anyhow::{self, bail},
+    signed::IsSigned,
+};
 #[cfg(feature = "onnxruntime")]
 use onnxruntime::{
     session::Session,
@@ -34,6 +37,8 @@ pub struct Tensor<Data = TensorData> {
     pub name: String,
     pub data: Data,
 }
+
+impl<Data: IsSigned> IsSigned for Tensor<Data> {}
 
 #[cfg(feature = "onnxruntime")]
 impl<'t> AsOrtTensorDyn<'t> for Tensor {
@@ -82,6 +87,8 @@ pub enum TensorData {
     Image(super::vision::tensor::ImageTensorData),
     String(super::nlp::tensor::StringTensorData),
 }
+
+impl IsSigned for TensorData {}
 
 #[cfg(feature = "onnxruntime")]
 impl<'t> AsOrtTensorDyn<'t> for TensorData {

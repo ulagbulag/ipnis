@@ -1,4 +1,5 @@
 use bytecheck::CheckBytes;
+use ipis::core::signed::IsSigned;
 use rkyv::{Archive, Deserialize, Serialize};
 #[cfg(feature = "onnxruntime")]
 use {
@@ -14,6 +15,8 @@ pub enum TensorType {
     U8,
     F32,
 }
+
+impl IsSigned for TensorType {}
 
 #[cfg(feature = "onnxruntime")]
 impl TryFrom<TensorElementDataType> for TensorType {

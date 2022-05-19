@@ -1,5 +1,8 @@
 use bytecheck::CheckBytes;
-use ipis::core::anyhow::{self, bail};
+use ipis::core::{
+    anyhow::{self, bail},
+    signed::IsSigned,
+};
 use rkyv::{Archive, Deserialize, Serialize};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Archive, Serialize, Deserialize)]
@@ -11,6 +14,8 @@ pub enum ImageChannel {
     Rgb8,
     Rgba8,
 }
+
+impl IsSigned for ImageChannel {}
 
 impl TryFrom<usize> for ImageChannel {
     type Error = anyhow::Error;

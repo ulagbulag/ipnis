@@ -1,6 +1,10 @@
 use std::collections::HashMap;
 
-use ipis::core::ndarray;
+use ipis::core::{
+    ndarray,
+    signed::IsSigned,
+    value::text::{LanguageTag, Text},
+};
 
 use crate::tensor::ToTensor;
 
@@ -9,6 +13,8 @@ pub struct QAInputs {
     pub query: Vec<String>,
     pub context: Vec<String>,
 }
+
+impl IsSigned for QAInputs {}
 
 impl QAInputs {
     #[cfg(feature = "rust_tokenizers")]
@@ -44,6 +50,8 @@ pub struct SCInputs {
     pub context: Vec<String>,
 }
 
+impl IsSigned for SCInputs {}
+
 impl SCInputs {
     #[cfg(feature = "rust_tokenizers")]
     pub fn tokenize<Tokenizer, Vocab>(
@@ -78,11 +86,15 @@ pub struct GenericInput {
     pub text_2: Option<String>,
 }
 
+impl IsSigned for GenericInput {}
+
 pub struct Tokenized {
     pub input_ids: ndarray::Array<i64, ndarray::Ix2>,
     pub inputs: HashMap<String, Box<dyn ToTensor + Send + Sync>>,
     pub inputs_str: Vec<GenericInput>,
 }
+
+impl IsSigned for Tokenized {}
 
 #[cfg(feature = "rust_tokenizers")]
 fn tokenize<Tokenizer, Vocab>(
