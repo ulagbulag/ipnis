@@ -109,6 +109,7 @@ impl<IpiisClient> IpnisClientInner<IpiisClient> {
 
                     recv.read_u64().await?;
                     recv.read_to_end(&mut buf).await?;
+                    assert_eq!(buf.len(), path.len as usize);
                     buf
                 };
 
