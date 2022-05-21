@@ -20,6 +20,7 @@ use ipnis_api::{
 use ipnis_modules_image_classification::IpnisImageClassification;
 use ipsis_api::client::IpsisClient;
 use ipsis_modules_gdown::IpsisGdown;
+use ipsis_modules_web::IpsisWeb;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -47,7 +48,15 @@ async fn main() -> Result<()> {
         // name
         "data".to_string(),
         // value
-        ImageReader::open("./assets/dog.jpg")?.decode()?,
+        {
+            let url = "https://upload.wikimedia.org/wikipedia/commons/7/7a/Huskiesatrest.jpg";
+            let path = Path {
+                value: "67JwwcZ5HHMP26GoVMtSh1SVS3u3wbr6GB5snKHPLfGP".parse()?,
+                len: 4_854_901,
+            };
+            let local_path = storage.download_web_static_on_local(url, &path).await?;
+            ImageReader::open(local_path)?.decode()?
+        },
     )];
 
     // perform the inference

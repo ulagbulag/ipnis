@@ -17,6 +17,7 @@ repository = "https://github.com/ulagbulag-village/ipnis"
 ipis = { git = "https://github.com/ulagbulag-village/ipis.git" }
 ipsis-api = { git = "https://github.com/ulagbulag-village/ipsis.git" }
 ipsis-modules-gdown = { git = "https://github.com/ulagbulag-village/ipsis.git" }
+ipsis-modules-web = { git = "https://github.com/ulagbulag-village/ipsis.git" }
 ipnis-api = { path = "../../../../api" }
 ipnis-modules-image-classification = { path = ".." }
 

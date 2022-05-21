@@ -13,6 +13,7 @@ use ipnis_api::{
 use ipnis_modules_text_classification::{labels::Labels, IpnisTextClassification};
 use ipsis_api::client::IpsisClient;
 use ipsis_modules_gdown::IpsisGdown;
+use ipsis_modules_web::IpsisWeb;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -34,11 +35,27 @@ async fn main() -> Result<()> {
 
     // create a tokenizer
     let tokenizer = {
-        // NOTE: source: "https://huggingface.co/cross-encoder/nli-distilroberta-base/raw/main/vocab.json"
-        let vocab = RobertaVocab::from_file("nli-distilroberta-base-vocab.json")?;
+        let vocab = {
+            let url =
+                "https://huggingface.co/cross-encoder/nli-distilroberta-base/raw/main/vocab.json";
+            let path = Path {
+                value: "TBNdeMd2zDstNeqDheuzvkKBDdsPxwV8uZrCfeg1mDt".parse()?,
+                len: 898_822,
+            };
+            let local_path = storage.download_web_static_on_local(url, &path).await?;
+            RobertaVocab::from_file(&local_path.display().to_string())?
+        };
 
-        // NOTE: source: "https://huggingface.co/cross-encoder/nli-distilroberta-base/raw/main/merges.txt"
-        let merges = BpePairVocab::from_file("nli-distilroberta-base-merges.txt")?;
+        let merges = {
+            let url =
+                "https://huggingface.co/cross-encoder/nli-distilroberta-base/raw/main/merges.txt";
+            let path = Path {
+                value: "2wjm5iUUx5Kf85GjdYBVuFxarz5hr8fwLHX7NRRG2SHA".parse()?,
+                len: 456_318,
+            };
+            let local_path = storage.download_web_static_on_local(url, &path).await?;
+            BpePairVocab::from_file(&local_path.display().to_string())?
+        };
 
         RobertaTokenizer::from_existing_vocab_and_merges(vocab, merges, false, false)
     };
