@@ -2,7 +2,11 @@ use std::{collections::HashMap, sync::Arc};
 
 use ipis::{
     async_trait::async_trait,
-    core::{anyhow::Result, ndarray, value::array::Array},
+    core::{
+        anyhow::{bail, Result},
+        ndarray,
+        value::array::Array,
+    },
     env::Infer,
     futures::TryFutureExt,
     path::Path,
@@ -107,7 +111,11 @@ impl<IpiisClient> IpnisClientInner<IpiisClient> {
                     let mut recv = self.ipiis.get_raw(path).await?;
                     let mut buf = Vec::with_capacity(path.len.try_into()?);
 
-                    recv.read_u64().await?;
+                    let len = recv.read_u64().await?;
+                    if len != path.len {
+                        bail!("failed to validate the length");
+                    }
+
                     recv.read_to_end(&mut buf).await?;
                     assert_eq!(buf.len(), path.len as usize);
                     buf
