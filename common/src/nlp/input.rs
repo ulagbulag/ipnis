@@ -17,19 +17,15 @@ pub struct QAInputs {
 impl IsSigned for QAInputs {}
 
 impl QAInputs {
-    #[cfg(feature = "rust_tokenizers")]
-    pub fn tokenize<Tokenizer, Vocab>(
+    #[cfg(feature = "tokenizers")]
+    pub fn tokenize(
         self,
-        tokenizer: &Tokenizer,
-    ) -> ::ipis::core::anyhow::Result<Tokenized>
-    where
-        Tokenizer: ::rust_tokenizers::tokenizer::Tokenizer<Vocab>,
-        Vocab: ::rust_tokenizers::vocab::Vocab,
-    {
+        tokenizer: &::tokenizers::Tokenizer,
+    ) -> ::ipis::core::anyhow::Result<Tokenized> {
         tokenize(tokenizer, self.into_vec())
     }
 
-    #[cfg(feature = "rust_tokenizers")]
+    #[cfg(feature = "tokenizers")]
     fn into_vec(self) -> Vec<GenericInput> {
         use ipis::itertools::Itertools;
 
@@ -53,19 +49,15 @@ pub struct SCInputs {
 impl IsSigned for SCInputs {}
 
 impl SCInputs {
-    #[cfg(feature = "rust_tokenizers")]
-    pub fn tokenize<Tokenizer, Vocab>(
+    #[cfg(feature = "tokenizers")]
+    pub fn tokenize(
         self,
-        tokenizer: &Tokenizer,
-    ) -> ::ipis::core::anyhow::Result<Tokenized>
-    where
-        Tokenizer: ::rust_tokenizers::tokenizer::Tokenizer<Vocab>,
-        Vocab: ::rust_tokenizers::vocab::Vocab,
-    {
+        tokenizer: &::tokenizers::Tokenizer,
+    ) -> ::ipis::core::anyhow::Result<Tokenized> {
         tokenize(tokenizer, self.into_vec())
     }
 
-    #[cfg(feature = "rust_tokenizers")]
+    #[cfg(feature = "tokenizers")]
     fn into_vec(self) -> Vec<GenericInput> {
         use ipis::itertools::Itertools;
 
@@ -75,6 +67,35 @@ impl SCInputs {
             .map(|(text_2, text_1)| GenericInput {
                 text_1,
                 text_2: Some(text_2),
+            })
+            .collect()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TranslationInputs {
+    pub context: Vec<Text>,
+    pub target: LanguageTag,
+}
+
+impl IsSigned for TranslationInputs {}
+
+impl TranslationInputs {
+    #[cfg(feature = "tokenizers")]
+    pub fn tokenize(
+        self,
+        tokenizer: &::tokenizers::Tokenizer,
+    ) -> ::ipis::core::anyhow::Result<Tokenized> {
+        tokenize(tokenizer, self.into_vec())
+    }
+
+    #[cfg(feature = "tokenizers")]
+    fn into_vec(self) -> Vec<GenericInput> {
+        self.context
+            .into_iter()
+            .map(|text_1| GenericInput {
+                text_1: text_1.to_string(),
+                text_2: None,
             })
             .collect()
     }
@@ -96,30 +117,47 @@ pub struct Tokenized {
 
 impl IsSigned for Tokenized {}
 
-#[cfg(feature = "rust_tokenizers")]
-fn tokenize<Tokenizer, Vocab>(
-    tokenizer: &Tokenizer,
+#[cfg(feature = "tokenizers")]
+fn tokenize(
+    tokenizer: &::tokenizers::Tokenizer,
     inputs_str: Vec<GenericInput>,
-) -> ::ipis::core::anyhow::Result<Tokenized>
-where
-    Tokenizer: ::rust_tokenizers::tokenizer::Tokenizer<Vocab>,
-    Vocab: ::rust_tokenizers::vocab::Vocab,
-{
-    use ipis::core::{anyhow::bail, value::array::Array};
-    use rust_tokenizers::tokenizer::TruncationStrategy;
+) -> ::ipis::core::anyhow::Result<Tokenized> {
+    use ipis::core::{
+        anyhow::{anyhow, bail},
+        value::array::Array,
+    };
+    use tokenizers::Encoding;
 
     use crate::{nlp::tensor::StringTensorData, tensor::TensorData};
 
-    let max_len = inputs_str
-        .iter()
-        .map(|input| {
-            input
-                .text_1
-                .len()
-                .max(input.text_2.as_ref().map(|e| e.len()).unwrap_or(0))
-        })
-        .max()
-        .unwrap_or(0);
+    fn collect_encode_batch(
+        encodings: &[Encoding],
+        max_len: usize,
+        f: impl Fn(&Encoding) -> &[u32],
+    ) -> ::ipis::core::anyhow::Result<ndarray::Array<i64, ndarray::Ix2>> {
+        let arrays: Vec<_> = encodings
+            .iter()
+            .map(|encoding| {
+                f(encoding)
+                    .iter()
+                    .copied()
+                    .map(i64::from)
+                    .collect::<Vec<_>>()
+            })
+            .map(|mut input| {
+                input.extend([0].repeat(max_len - input.len()));
+                input
+            })
+            .map(ndarray::Array::from)
+            .map(|input| {
+                let length = input.len();
+                input.into_shape((1, length))
+            })
+            .collect::<Result<_, _>>()?;
+
+        let arrays: Vec<_> = arrays.iter().map(|array| array.view()).collect();
+        ndarray::concatenate(ndarray::Axis(0), &arrays).map_err(Into::into)
+    }
 
     let inputs_1: Vec<_> = inputs_str
         .iter()
@@ -134,45 +172,29 @@ where
         bail!("failed to parse the text pairs");
     }
 
-    let input_ids = if inputs_2.is_empty() {
-        tokenizer.encode_list(&inputs_1, max_len, &TruncationStrategy::LongestFirst, 0)
+    let encodings = if inputs_2.is_empty() {
+        tokenizer
+            .encode_batch(inputs_1, true)
+            .map_err(|e| anyhow!(e))?
     } else {
         let inputs_pair: Vec<_> = inputs_1.into_iter().zip(inputs_2.into_iter()).collect();
 
-        tokenizer.encode_pair_list(&inputs_pair, max_len, &TruncationStrategy::LongestFirst, 0)
+        tokenizer
+            .encode_batch(inputs_pair, true)
+            .map_err(|e| anyhow!(e))?
     };
-    let input_lens: Vec<_> = input_ids
+    let input_lens: Vec<_> = encodings
         .iter()
-        .map(|input| input.token_ids.len())
+        .map(|encoding| encoding.get_ids().len())
         .collect();
     let max_len = input_lens.iter().max().copied().unwrap_or(0);
 
-    let input_ids: Vec<_> = input_ids
-        .into_iter()
-        .map(|input| input.token_ids)
-        .map(|mut input| {
-            input.extend([0].repeat(max_len - input.len()));
-            input
-        })
-        .map(ndarray::Array::from)
-        .map(|input| {
-            let length = input.len();
-            input.into_shape((1, length))
-        })
-        .collect::<Result<_, _>>()?;
-
-    let input_ids: Vec<_> = input_ids.iter().map(|input| input.view()).collect();
-    let input_ids = ndarray::concatenate(ndarray::Axis(0), &input_ids)?;
-
-    let attention_mask = {
-        let mut buf = input_ids.clone();
-        buf.fill(1);
-
-        for (mut row, len) in buf.rows_mut().into_iter().zip(input_lens.iter().copied()) {
-            row.slice_mut(ndarray::s!(len..)).fill(0);
-        }
-        buf
-    };
+    let input_ids = collect_encode_batch(&encodings, max_len, |encoding| encoding.get_ids())?;
+    let attention_mask = collect_encode_batch(&encodings, max_len, |encoding| {
+        encoding.get_attention_mask()
+    })?;
+    let token_type_ids =
+        collect_encode_batch(&encodings, max_len, |encoding| encoding.get_type_ids())?;
 
     let inputs = vec![
         (
@@ -185,6 +207,12 @@ where
             "attention_mask".to_string(),
             Box::new(TensorData::from(StringTensorData::I64(Array(
                 attention_mask.into(),
+            )))) as Box<dyn ToTensor + Send + Sync>,
+        ),
+        (
+            "token_type_ids".to_string(),
+            Box::new(TensorData::from(StringTensorData::I64(Array(
+                token_type_ids.into(),
             )))) as Box<dyn ToTensor + Send + Sync>,
         ),
     ]

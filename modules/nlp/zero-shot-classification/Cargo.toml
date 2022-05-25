@@ -17,5 +17,3 @@ repository = "https://github.com/ulagbulag-village/ipnis"
 ipis = { git = "https://github.com/ulagbulag-village/ipis.git" }
 ipnis-common = { path = "../../../common" }
 ipnis-modules-text-classification = { path = "../text-classification" }
-
-rust_tokenizers = "7.0"

@@ -27,7 +27,7 @@ pub trait IpnisImageClassification: Ipnis {
 
         let mut outputs = self.call(model, &inputs).await?;
 
-        if outputs.len() != 1 {
+        if outputs.is_empty() {
             let outputs = outputs.len();
             bail!("unexpected outputs: Expected 1, Given {outputs}");
         }

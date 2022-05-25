@@ -1,14 +1,12 @@
-use ipis::{core::anyhow::Result, env::Infer, path::Path, tokio};
+use ipis::{
+    core::anyhow::{anyhow, Result},
+    env::Infer,
+    path::Path,
+    tokio,
+};
 use ipnis_api::{
     client::IpnisClientInner,
-    common::{
-        nlp::input::SCInputs,
-        rust_tokenizers::{
-            tokenizer::RobertaTokenizer,
-            vocab::{BpePairVocab, RobertaVocab, Vocab},
-        },
-        Ipnis,
-    },
+    common::{nlp::input::SCInputs, tokenizers::Tokenizer, Ipnis},
 };
 use ipnis_modules_text_classification::{labels::Labels, IpnisTextClassification};
 use ipsis_api::client::IpsisClient;
@@ -21,12 +19,12 @@ async fn main() -> Result<()> {
     let client = IpnisClientInner::<IpsisClient>::try_infer().await?;
     let storage: &IpsisClient = &client.ipiis;
 
-    // download a model (cross-encoder/nli-distilroberta-base.onnx)
+    // download a model (facebook/bart-large-mnli.onnx)
     // NOTE: you can generate manually from: "https://github.com/kerryeon/huggingface-onnx-tutorial.git"
-    let id = "1Wxvb2WYD0juixaYUJnaVexRUrlwetB7X";
+    let id = "12KkF4yGsGeExjglmeHfhGv5sJDxCRLvz";
     let path = Path {
-        value: "HvL9LCa1KJT5p4GToUYwhMyUachSvgWMjVgtxjdMQQgW".parse()?,
-        len: 328_522_871,
+        value: "CPGo5mNvup9WSZWmwiUBxRmWKPXUb25LVpniXAKnBNrv".parse()?,
+        len: 1_629_607_922,
     };
     let () = storage.gdown_static(id, &path).await?;
 
@@ -35,29 +33,14 @@ async fn main() -> Result<()> {
 
     // create a tokenizer
     let tokenizer = {
-        let vocab = {
-            let url =
-                "https://huggingface.co/cross-encoder/nli-distilroberta-base/raw/main/vocab.json";
-            let path = Path {
-                value: "TBNdeMd2zDstNeqDheuzvkKBDdsPxwV8uZrCfeg1mDt".parse()?,
-                len: 898_822,
-            };
-            let local_path = storage.download_web_static_on_local(url, &path).await?;
-            RobertaVocab::from_file(&local_path.display().to_string())?
+        let url = "https://huggingface.co/facebook/bart-large-mnli/raw/main/tokenizer.json";
+        let path = Path {
+            value: "9vAFtKbzBYeE5Vj6LDetkpQaMukVbrZDQAjJkwWx8hpZ".parse()?,
+            len: 1_355_863,
         };
+        let local_path = storage.download_web_static_on_local(url, &path).await?;
 
-        let merges = {
-            let url =
-                "https://huggingface.co/cross-encoder/nli-distilroberta-base/raw/main/merges.txt";
-            let path = Path {
-                value: "2wjm5iUUx5Kf85GjdYBVuFxarz5hr8fwLHX7NRRG2SHA".parse()?,
-                len: 456_318,
-            };
-            let local_path = storage.download_web_static_on_local(url, &path).await?;
-            BpePairVocab::from_file(&local_path.display().to_string())?
-        };
-
-        RobertaTokenizer::from_existing_vocab_and_merges(vocab, merges, false, false)
+        Tokenizer::from_file(&local_path.display().to_string()).map_err(|e| anyhow!(e))?
     };
 
     // make a sample inputs

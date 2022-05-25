@@ -1,5 +1,5 @@
 [package]
-name = "ipnis-modules-text-classification"
+name = "ipnis-modules-translation"
 version = "0.1.0"
 edition = "2021"
 

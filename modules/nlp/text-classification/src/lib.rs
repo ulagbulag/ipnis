@@ -16,8 +16,8 @@ use ipnis_common::{
         tensor::StringTensorData,
     },
     onnxruntime::tensor::ndarray_tensor::NdArrayTensor,
-    rust_tokenizers,
     tensor::Tensor,
+    tokenizers::Tokenizer,
     Ipnis,
 };
 
@@ -51,17 +51,13 @@ pub struct RawOutput {
 
 #[async_trait]
 pub trait IpnisTextClassification: Ipnis {
-    async fn call_text_classification<Tokenizer, Vocab>(
+    async fn call_text_classification(
         &self,
         model: &Model,
         tokenizer: &Tokenizer,
         inputs: SCInputs,
         labels: Labels,
-    ) -> Result<Outputs>
-    where
-        Tokenizer: rust_tokenizers::tokenizer::Tokenizer<Vocab> + Sync,
-        Vocab: rust_tokenizers::vocab::Vocab,
-    {
+    ) -> Result<Outputs> {
         let outputs = self
             .call_text_classification_raw(model, tokenizer, inputs, labels)
             .await?;
@@ -98,28 +94,24 @@ pub trait IpnisTextClassification: Ipnis {
         })
     }
 
-    async fn call_text_classification_raw<Tokenizer, Vocab>(
+    async fn call_text_classification_raw(
         &self,
         model: &Model,
         tokenizer: &Tokenizer,
         inputs: SCInputs,
         labels: Labels,
-    ) -> Result<RawOutputs>
-    where
-        Tokenizer: rust_tokenizers::tokenizer::Tokenizer<Vocab> + Sync,
-        Vocab: rust_tokenizers::vocab::Vocab,
-    {
+    ) -> Result<RawOutputs> {
         let Tokenized {
             inputs, inputs_str, ..
         } = inputs.tokenize(tokenizer)?;
 
         let mut outputs = self.call(model, &inputs).await?;
-        if outputs.len() != 1 {
+        if outputs.is_empty() {
             let outputs = outputs.len();
             bail!("unexpected outputs: Expected 1, Given {outputs}");
         }
 
-        let logits: Tensor<StringTensorData> = outputs.pop().unwrap().try_into()?;
+        let logits: Tensor<StringTensorData> = Tensor::find(&mut outputs, "logits")?.try_into()?;
 
         match &logits.data {
             StringTensorData::F32(logits) => {

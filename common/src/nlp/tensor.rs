@@ -82,7 +82,7 @@ impl TryFrom<Tensor> for Tensor<StringTensorData> {
                     })
                 } else {
                     let shape = data.shape();
-                    bail!("unexpected classes shape yet: {shape:?}")
+                    bail!("unexpected string shape yet: {shape:?}")
                 }
             }
             TensorData::String(data) => Ok(Tensor {

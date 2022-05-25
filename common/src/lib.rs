@@ -2,8 +2,8 @@
 pub extern crate image;
 #[cfg(feature = "onnxruntime")]
 pub extern crate onnxruntime;
-#[cfg(feature = "rust_tokenizers")]
-pub extern crate rust_tokenizers;
+#[cfg(feature = "tokenizers")]
+pub extern crate tokenizers;
 
 pub mod model;
 pub mod nlp;

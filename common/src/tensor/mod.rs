@@ -6,7 +6,7 @@ pub mod ty;
 
 use bytecheck::CheckBytes;
 use ipis::core::{
-    anyhow::{self, bail},
+    anyhow::{bail, Result},
     signed::IsSigned,
 };
 #[cfg(feature = "onnxruntime")]
@@ -19,11 +19,11 @@ use rkyv::{Archive, Deserialize, Serialize};
 use self::{dimension::Dimensions, shape::Shape, ty::TensorType};
 
 pub trait ToTensor {
-    fn to_tensor(&self, shape: &Shape) -> anyhow::Result<Tensor>;
+    fn to_tensor(&self, shape: &Shape) -> Result<Tensor>;
 }
 
 impl ToTensor for Box<dyn ToTensor + Send + Sync> {
-    fn to_tensor(&self, shape: &Shape) -> anyhow::Result<Tensor> {
+    fn to_tensor(&self, shape: &Shape) -> Result<Tensor> {
         (**self).to_tensor(shape)
     }
 }
@@ -61,7 +61,7 @@ impl AsTensorData for Tensor {
 }
 
 impl ToTensor for Tensor {
-    fn to_tensor(&self, parent: &Shape) -> anyhow::Result<Self> {
+    fn to_tensor(&self, parent: &Shape) -> Result<Self> {
         self.data.to_tensor(parent)
     }
 }
@@ -70,6 +70,17 @@ impl<Data> Tensor<Data>
 where
     Data: AsTensorData,
 {
+    pub fn find(tensors: &mut Vec<Self>, name: &str) -> Result<Self> {
+        match tensors
+            .iter()
+            .enumerate()
+            .find(|(_, tensor)| tensor.name == name)
+        {
+            Some((index, _)) => Ok(tensors.remove(index)),
+            None => bail!("failed to find the tensor: {name}"),
+        }
+    }
+
     pub fn shape(&self) -> Shape {
         Shape {
             name: self.name.as_str().into(),
@@ -126,7 +137,7 @@ impl AsTensorData for TensorData {
 }
 
 impl ToTensor for TensorData {
-    fn to_tensor(&self, parent: &Shape) -> anyhow::Result<Tensor> {
+    fn to_tensor(&self, parent: &Shape) -> Result<Tensor> {
         let child = self.shape(&parent.name);
         if parent.contains(&child) {
             Ok(Tensor {

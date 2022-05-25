@@ -8,7 +8,7 @@ use ipis::{
 use ipnis_common::{
     model::Model,
     nlp::{
-        input::{QAInputs, Tokenized},
+        input::{Tokenized, TranslationInputs},
         tensor::StringTensorData,
     },
     tensor::Tensor,
@@ -29,12 +29,12 @@ pub struct Output {
 }
 
 #[async_trait]
-pub trait IpnisQuestionAnswering: Ipnis {
-    async fn call_question_answering(
+pub trait IpnisTranslation: Ipnis {
+    async fn call_translation(
         &self,
         model: &Model,
         tokenizer: &Tokenizer,
-        inputs: QAInputs,
+        inputs: TranslationInputs,
     ) -> Result<Outputs> {
         let Tokenized {
             input_ids,
@@ -84,7 +84,7 @@ pub trait IpnisQuestionAnswering: Ipnis {
     }
 }
 
-impl<T: Ipnis> IpnisQuestionAnswering for T {}
+impl<T: Ipnis> IpnisTranslation for T {}
 
 fn argmax<S>(mat: &ndarray::ArrayBase<S, ndarray::Ix2>) -> ndarray::Array1<usize>
 where

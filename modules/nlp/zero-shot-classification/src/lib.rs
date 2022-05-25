@@ -5,7 +5,7 @@ use ipis::{
         ordered_float::OrderedFloat,
     },
 };
-use ipnis_common::{model::Model, nlp::input::SCInputs, rust_tokenizers};
+use ipnis_common::{model::Model, nlp::input::SCInputs, tokenizers::Tokenizer};
 use ipnis_modules_text_classification::{labels::Labels, IpnisTextClassification};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -22,17 +22,13 @@ pub struct Output {
 
 #[async_trait]
 pub trait IpnisZeroShotClassification: IpnisTextClassification {
-    async fn call_zero_shot_classification<Tokenizer, Vocab>(
+    async fn call_zero_shot_classification(
         &self,
         model: &Model,
         tokenizer: &Tokenizer,
         inputs: SCInputs,
         mut labels: Labels,
-    ) -> Result<Outputs>
-    where
-        Tokenizer: rust_tokenizers::tokenizer::Tokenizer<Vocab> + Sync,
-        Vocab: rust_tokenizers::vocab::Vocab,
-    {
+    ) -> Result<Outputs> {
         // validate labels
         if labels.contradiction.is_none() {
             bail!("'contradiction' label is required");

@@ -1,5 +1,5 @@
 [package]
-name = "ipnis-modules-text-classification"
+name = "ipnis-modules-translation-example"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,7 +7,7 @@ authors = ["Ho Kim <ho.kim@ulagbulag.io>"]
 description = "InterPlanetary Neural Interpretation Service"
 documentation = "https://docs.rs/ipnis"
 license = "MIT OR Apache-2.0"
-readme = "../../../README.md"
+readme = "../../../../README.md"
 homepage = "https://ulagbulag.io/"
 repository = "https://github.com/ulagbulag-village/ipnis"
 
@@ -15,4 +15,8 @@ repository = "https://github.com/ulagbulag-village/ipnis"
 
 [dependencies]
 ipis = { git = "https://github.com/ulagbulag-village/ipis.git" }
-ipnis-common = { path = "../../../common", features = ["tokenizers"] }
+ipsis-api = { git = "https://github.com/ulagbulag-village/ipsis.git" }
+ipsis-modules-gdown = { git = "https://github.com/ulagbulag-village/ipsis.git" }
+ipsis-modules-web = { git = "https://github.com/ulagbulag-village/ipsis.git" }
+ipnis-api = { path = "../../../../api" }
+ipnis-modules-translation = { path = ".." }
