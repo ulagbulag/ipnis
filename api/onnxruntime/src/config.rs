@@ -1,7 +1,7 @@
 use ipis::{async_trait::async_trait, core::anyhow::Result, env::Infer};
 use ipnis_common::onnxruntime::{GraphOptimizationLevel, LoggingLevel};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ClientConfig {
     pub log_level: LoggingLevel,
     pub optimization_level: GraphOptimizationLevel,

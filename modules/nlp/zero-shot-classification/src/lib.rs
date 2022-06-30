@@ -8,12 +8,12 @@ use ipis::{
 use ipnis_common::{model::Model, nlp::input::SCInputs, tokenizers::Tokenizer};
 use ipnis_modules_text_classification::{labels::Labels, IpnisTextClassification};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Outputs {
     pub answers: Vec<Output>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Output {
     pub query: String,
     pub context: String,

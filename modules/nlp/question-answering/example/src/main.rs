@@ -26,7 +26,7 @@ async fn main() -> Result<()> {
         value: "55PMH1CZWbFLPe7sNSGQCXtxfoNewSjkCxYQygZFWrdy".parse()?,
         len: 1_336_517_805,
     };
-    let () = storage.gdown_static(id, &path).await?;
+    storage.gdown_static(id, &path).await?;
 
     // load model
     let model = client.load_model(&path).await?;

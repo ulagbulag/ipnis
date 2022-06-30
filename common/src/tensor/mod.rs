@@ -28,7 +28,7 @@ impl ToTensor for Box<dyn ToTensor + Send + Sync> {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Archive, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Archive, Serialize, Deserialize)]
 #[archive(bound(archive = "
     <Data as Archive>::Archived: ::core::fmt::Debug + PartialEq,
 ",))]

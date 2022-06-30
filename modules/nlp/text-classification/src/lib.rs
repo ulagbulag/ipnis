@@ -23,24 +23,24 @@ use ipnis_common::{
 
 use crate::labels::Labels;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Outputs {
     pub answers: Vec<Output>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Output {
     pub query: String,
     pub context: String,
     pub label: Option<TextLabel>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RawOutputs {
     pub answers: Vec<RawOutput>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RawOutput {
     pub query: String,
     pub context: String,
