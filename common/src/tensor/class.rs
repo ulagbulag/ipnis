@@ -70,19 +70,20 @@ impl TryFrom<Tensor> for Tensor<ClassTensorData> {
 
     fn try_from(value: Tensor) -> Result<Self, Self::Error> {
         match value.data {
-            TensorData::Dynamic(DynamicTensorData::F32(data)) => {
-                if let [batch_size, num_classes] = *data.shape() {
+            TensorData::Dynamic(DynamicTensorData::F32(data)) => match *data.shape() {
+                [batch_size, num_classes] => {
                     let data =
                         ClassTensorData::F32(Array(data.0.into_shape((batch_size, num_classes))?));
                     Ok(Tensor {
                         name: value.name,
                         data,
                     })
-                } else {
+                }
+                _ => {
                     let shape = data.shape();
                     bail!("unexpected classes shape yet: {shape:?}")
                 }
-            }
+            },
             TensorData::Class(data) => Ok(Tensor {
                 name: value.name,
                 data,

@@ -1,14 +1,15 @@
-use ipis::{core::anyhow::Result, env::Infer, path::Path, tokio};
+use ipis::{
+    core::{
+        anyhow::Result,
+        value::text::{LanguageTag, Text},
+    },
+    env::Infer,
+    path::Path,
+    tokio,
+};
 use ipnis_api::{
     client::IpnisClientInner,
-    common::{
-        nlp::input::TranslationInputs,
-        rust_tokenizers::{
-            tokenizer::RobertaTokenizer,
-            vocab::{BpePairVocab, RobertaVocab, Vocab},
-        },
-        Ipnis,
-    },
+    common::{nlp::input::TranslationInputs, rust_tokenizers::tokenizer::M2M100Tokenizer, Ipnis},
 };
 use ipnis_modules_translation::IpnisTranslation;
 use ipsis_api::client::IpsisClient;
@@ -21,47 +22,57 @@ async fn main() -> Result<()> {
     let client = IpnisClientInner::<IpsisClient>::try_infer().await?;
     let storage: &IpsisClient = &client.ipiis;
 
-    // download a model (deepset/roberta-base-squad2.onnx)
+    // download a model (facebook_m2m100-418m.onnx.tar)
     // NOTE: you can generate manually from: "https://github.com/kerryeon/huggingface-onnx-tutorial.git"
-    let id = "1gICu4NshBMQyUNgWsc2kydLBPpasIMNF";
+    let id = "1byCoCALKPn9woRXdNxCJpM4Pq5E1Lhac";
     let path = Path {
-        value: "FjL3dTmyrudvLxFcezJ7b3oGq7Q48ZUS8HH5e4wajVL7".parse()?,
-        len: 496_300_196,
+        value: "ZHs8PuasH865vKNr43xHDd3SdpG5VvnWAjuHfeBpzUg".parse()?,
+        len: 2_464_829_440,
     };
-    let () = storage.gdown_static(id, &path).await?;
+    storage.gdown_static(id, &path).await?;
 
     // load model
     let model = client.load_model(&path).await?;
 
     // create a tokenizer
     let tokenizer = {
-        let vocab = {
-            let url = "https://huggingface.co/deepset/roberta-base-squad2/raw/main/vocab.json";
+        let vocab_path = {
+            let url = "https://huggingface.co/facebook/m2m100_418M/raw/main/vocab.json";
             let path = Path {
-                value: "TBNdeMd2zDstNeqDheuzvkKBDdsPxwV8uZrCfeg1mDt".parse()?,
-                len: 898_822,
+                value: "DJywDjN3jPFnKAU6Lq2wnLT5w57bwmYraqS86AsN2qCP".parse()?,
+                len: 3_708_092,
             };
-            let local_path = storage.download_web_static_on_local(url, &path).await?;
-            RobertaVocab::from_file(&local_path.display().to_string())?
+            storage
+                .download_web_static_on_local(url, &path)
+                .await?
+                .display()
+                .to_string()
         };
 
-        let merges = {
-            let url = "https://huggingface.co/deepset/roberta-base-squad2/raw/main/merges.txt";
+        let model_path = {
+            let url =
+                "https://huggingface.co/facebook/m2m100_418M/resolve/main/sentencepiece.bpe.model";
             let path = Path {
-                value: "2wjm5iUUx5Kf85GjdYBVuFxarz5hr8fwLHX7NRRG2SHA".parse()?,
-                len: 456_318,
+                value: "FbxCaxnuNbc3s7ZnMG8AMXTBy73ooeFG68jEQtSkGeTB".parse()?,
+                len: 2_423_393,
             };
-            let local_path = storage.download_web_static_on_local(url, &path).await?;
-            BpePairVocab::from_file(&local_path.display().to_string())?
+            storage
+                .download_web_static_on_local(url, &path)
+                .await?
+                .display()
+                .to_string()
         };
 
-        RobertaTokenizer::from_existing_vocab_and_merges(vocab, merges, false, false)
+        M2M100Tokenizer::from_files(&vocab_path, &model_path, false)?
     };
 
     // make a sample inputs
     let inputs = TranslationInputs {
-        query: vec!["What is my name?".into()],
-        context: vec!["My name is Sarah and I live in London.".into()],
+        context: vec![Text {
+            msg: "아니 이게 될 리가 없잖아?".into(),
+            lang: "ko-KR".parse()?,
+        }],
+        target: LanguageTag::new_en_us(),
     };
 
     // perform the inference

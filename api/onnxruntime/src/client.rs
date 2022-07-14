@@ -2,15 +2,11 @@ use std::{collections::HashMap, sync::Arc};
 
 use ipis::{
     async_trait::async_trait,
-    core::{
-        anyhow::{bail, Result},
-        ndarray,
-        value::array::Array,
-    },
+    core::{anyhow::Result, ndarray, value::array::Array},
     env::Infer,
     futures::TryFutureExt,
     path::Path,
-    tokio::{io::AsyncReadExt, sync::Mutex},
+    tokio::sync::Mutex,
 };
 use ipnis_common::{
     model::Model,
@@ -19,6 +15,7 @@ use ipnis_common::{
     Ipnis,
 };
 use ipsis_common::Ipsis;
+use ipsis_modules_local::IpsisLocal;
 
 use crate::config::ClientConfig;
 
@@ -99,6 +96,7 @@ impl<IpiisClient> IpnisClientInner<IpiisClient> {
     async fn load_session(&self, path: &Path) -> Result<Arc<Session>>
     where
         IpiisClient: Ipsis + Send + Sync,
+        <IpiisClient as Ipsis>::Reader: Sync,
     {
         let mut sessions = self.sessions.lock().await;
 
@@ -106,33 +104,45 @@ impl<IpiisClient> IpnisClientInner<IpiisClient> {
 
         match sessions.get(path) {
             Some(session) => Ok(session.clone()),
-            None => {
-                let model_bytes = {
-                    let mut recv = self.ipiis.get_raw(path).await?;
-                    let mut buf = Vec::with_capacity(path.len.try_into()?);
+            // .onnx.tar files for large (>2GB) models
+            None if path.len > 2_000_000_000 => {
+                // unpack tarball
+                let mut dirname = self.ipiis.download_on_local_tar(path, None).await?;
 
-                    let len = recv.read_u64().await?;
-                    if len != path.len {
-                        bail!("failed to validate the length");
-                    }
-
-                    recv.read_to_end(&mut buf).await?;
-                    assert_eq!(buf.len(), path.len as usize);
-                    buf
+                // find the root model
+                let filename = {
+                    dirname.push("model.onnx");
+                    dirname
                 };
 
-                let session = self
-                    .environment
-                    .new_session_builder()?
-                    .with_optimization_level(self.config.optimization_level)?
-                    .with_number_threads(self.config.number_threads.into())?
-                    .with_model_from_memory(&model_bytes)?;
-                let session = Arc::new(session);
+                let session = self.load_session_from_file(filename)?;
                 sessions.insert(*path, session.clone());
+                Ok(session)
+            }
+            None => {
+                // download model
+                let filename = self.ipiis.download_on_local(path, None).await?;
 
+                let session = self.load_session_from_file(filename)?;
+                sessions.insert(*path, session.clone());
                 Ok(session)
             }
         }
+    }
+
+    fn load_session_from_file<P>(&self, filename: P) -> Result<Arc<Session>>
+    where
+        IpiisClient: Ipsis + Send + Sync,
+        <IpiisClient as Ipsis>::Reader: Sync,
+        P: AsRef<::std::path::Path> + ::std::fmt::Debug,
+    {
+        self.environment
+            .new_session_builder()?
+            .with_optimization_level(self.config.optimization_level)?
+            .with_number_threads(self.config.number_threads.into())?
+            .with_model_from_file(filename)
+            .map(Into::into)
+            .map_err(Into::into)
     }
 }
 
@@ -140,6 +150,7 @@ impl<IpiisClient> IpnisClientInner<IpiisClient> {
 impl<IpiisClient> Ipnis for IpnisClientInner<IpiisClient>
 where
     IpiisClient: Ipsis + Send + Sync,
+    <IpiisClient as Ipsis>::Reader: Sync,
 {
     /// ## Thread-safe
     /// This method is thread-safe: https://github.com/microsoft/onnxruntime/issues/114#issuecomment-444725508

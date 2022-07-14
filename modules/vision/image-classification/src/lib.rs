@@ -38,4 +38,4 @@ pub trait IpnisImageClassification: Ipnis {
     }
 }
 
-impl<T: Ipnis> IpnisImageClassification for T {}
+impl<T: Ipnis + ?Sized> IpnisImageClassification for T {}

@@ -6,7 +6,7 @@ use ipis::{
 };
 use ipnis_api::{
     client::IpnisClientInner,
-    common::{nlp::input::QAInputs, tokenizers::Tokenizer, Ipnis},
+    common::{nlp::input::QAInputs, rust_tokenizers::tokenizer::BertTokenizer, Ipnis},
 };
 use ipnis_modules_question_answering::IpnisQuestionAnswering;
 use ipsis_api::client::IpsisClient;
@@ -33,14 +33,15 @@ async fn main() -> Result<()> {
 
     // create a tokenizer
     let tokenizer = {
-        let url = "https://huggingface.co/bert-large-uncased-whole-word-masking-finetuned-squad/raw/main/tokenizer.json";
+        let url = "https://huggingface.co/bert-large-uncased-whole-word-masking-finetuned-squad/raw/main/vocab.txt";
         let path = Path {
-            value: "EtgJQ4GuquhYFai27bad4G1MG57tVs2h8VYvMXuXeaKy".parse()?,
-            len: 466_062,
+            value: "XwPo2jr66aUT8i7oJRougPJqmkU5RJ87bqkxXbfnYf4".parse()?,
+            len: 231_508,
         };
         let local_path = storage.download_web_static_on_local(url, &path).await?;
 
-        Tokenizer::from_file(&local_path.display().to_string()).map_err(|e| anyhow!(e))?
+        BertTokenizer::from_file(&local_path.display().to_string(), true, false)
+            .map_err(|e| anyhow!(e))?
     };
 
     // make a sample inputs

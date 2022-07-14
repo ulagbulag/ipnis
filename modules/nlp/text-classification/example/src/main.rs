@@ -6,7 +6,7 @@ use ipis::{
 };
 use ipnis_api::{
     client::IpnisClientInner,
-    common::{nlp::input::SCInputs, tokenizers::Tokenizer, Ipnis},
+    common::{nlp::input::SCInputs, rust_tokenizers::tokenizer::RobertaTokenizer, Ipnis},
 };
 use ipnis_modules_text_classification::{labels::Labels, IpnisTextClassification};
 use ipsis_api::client::IpsisClient;
@@ -19,7 +19,7 @@ async fn main() -> Result<()> {
     let client = IpnisClientInner::<IpsisClient>::try_infer().await?;
     let storage: &IpsisClient = &client.ipiis;
 
-    // download a model (facebook/bart-large-mnli.onnx)
+    // download a model (   .onnx)
     // NOTE: you can generate manually from: "https://github.com/kerryeon/huggingface-onnx-tutorial.git"
     let id = "12KkF4yGsGeExjglmeHfhGv5sJDxCRLvz";
     let path = Path {
@@ -33,14 +33,27 @@ async fn main() -> Result<()> {
 
     // create a tokenizer
     let tokenizer = {
-        let url = "https://huggingface.co/facebook/bart-large-mnli/raw/main/tokenizer.json";
+        let url = "https://huggingface.co/facebook/bart-large-mnli/raw/main/vocab.json";
         let path = Path {
-            value: "9vAFtKbzBYeE5Vj6LDetkpQaMukVbrZDQAjJkwWx8hpZ".parse()?,
-            len: 1_355_863,
+            value: "TBNdeMd2zDstNeqDheuzvkKBDdsPxwV8uZrCfeg1mDt".parse()?,
+            len: 898_822,
         };
-        let local_path = storage.download_web_static_on_local(url, &path).await?;
+        let local_vocab_path = storage.download_web_static_on_local(url, &path).await?;
 
-        Tokenizer::from_file(&local_path.display().to_string()).map_err(|e| anyhow!(e))?
+        let url = "https://huggingface.co/facebook/bart-large-mnli/raw/main/merges.txt";
+        let path = Path {
+            value: "2wjm5iUUx5Kf85GjdYBVuFxarz5hr8fwLHX7NRRG2SHA".parse()?,
+            len: 456_318,
+        };
+        let local_merges_path = storage.download_web_static_on_local(url, &path).await?;
+
+        RobertaTokenizer::from_file(
+            &local_vocab_path.display().to_string(),
+            &local_merges_path.display().to_string(),
+            false,
+            false,
+        )
+        .map_err(|e| anyhow!(e))?
     };
 
     // make a sample inputs
@@ -48,6 +61,7 @@ async fn main() -> Result<()> {
         query: vec![
             "This example is mobile.".into(),
             "This example is a mobile.".into(),
+            "This example is not a mobile.".into(),
         ],
         context: vec![
             "Last week I upgraded my iOS version and ever since then my phone has been overheating whenever I use your app.".into(),

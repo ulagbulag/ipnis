@@ -16,8 +16,8 @@ use ipnis_common::{
         tensor::StringTensorData,
     },
     onnxruntime::tensor::ndarray_tensor::NdArrayTensor,
+    rust_tokenizers::{tokenizer::Tokenizer, vocab::Vocab},
     tensor::Tensor,
-    tokenizers::Tokenizer,
     Ipnis,
 };
 
@@ -51,13 +51,17 @@ pub struct RawOutput {
 
 #[async_trait]
 pub trait IpnisTextClassification: Ipnis {
-    async fn call_text_classification(
+    async fn call_text_classification<T, V>(
         &self,
         model: &Model,
-        tokenizer: &Tokenizer,
+        tokenizer: &T,
         inputs: SCInputs,
         labels: Labels,
-    ) -> Result<Outputs> {
+    ) -> Result<Outputs>
+    where
+        T: Tokenizer<V> + Sync,
+        V: Vocab,
+    {
         let outputs = self
             .call_text_classification_raw(model, tokenizer, inputs, labels)
             .await?;
@@ -94,13 +98,17 @@ pub trait IpnisTextClassification: Ipnis {
         })
     }
 
-    async fn call_text_classification_raw(
+    async fn call_text_classification_raw<T, V>(
         &self,
         model: &Model,
-        tokenizer: &Tokenizer,
+        tokenizer: &T,
         inputs: SCInputs,
         labels: Labels,
-    ) -> Result<RawOutputs> {
+    ) -> Result<RawOutputs>
+    where
+        T: Tokenizer<V> + Sync,
+        V: Vocab,
+    {
         let Tokenized {
             inputs, inputs_str, ..
         } = inputs.tokenize(tokenizer)?;
@@ -172,4 +180,4 @@ pub trait IpnisTextClassification: Ipnis {
     }
 }
 
-impl<T: Ipnis> IpnisTextClassification for T {}
+impl<T: Ipnis + ?Sized> IpnisTextClassification for T {}

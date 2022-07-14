@@ -1,7 +1,7 @@
 use ipis::{
     async_trait::async_trait,
     core::{
-        anyhow::{anyhow, bail, Result},
+        anyhow::{bail, Result},
         ndarray,
     },
 };
@@ -11,8 +11,8 @@ use ipnis_common::{
         input::{QAInputs, Tokenized},
         tensor::StringTensorData,
     },
+    rust_tokenizers::{tokenizer::Tokenizer, vocab::Vocab},
     tensor::Tensor,
-    tokenizers::Tokenizer,
     Ipnis,
 };
 
@@ -30,12 +30,16 @@ pub struct Output {
 
 #[async_trait]
 pub trait IpnisQuestionAnswering: Ipnis {
-    async fn call_question_answering(
+    async fn call_question_answering<T, V>(
         &self,
         model: &Model,
-        tokenizer: &Tokenizer,
+        tokenizer: &T,
         inputs: QAInputs,
-    ) -> Result<Outputs> {
+    ) -> Result<Outputs>
+    where
+        T: Tokenizer<V> + Sync,
+        V: Vocab,
+    {
         let Tokenized {
             input_ids,
             inputs,
@@ -66,8 +70,7 @@ pub trait IpnisQuestionAnswering: Ipnis {
                                 query: input.text_1,
                                 context: input.text_2.unwrap(),
                                 answer: tokenizer
-                                    .decode(answer.into_raw_vec(), true)
-                                    .map_err(|e| anyhow!(e))?
+                                    .decode(answer.as_slice().unwrap(), true, true)
                                     .trim()
                                     .to_string(),
                             })
@@ -84,7 +87,7 @@ pub trait IpnisQuestionAnswering: Ipnis {
     }
 }
 
-impl<T: Ipnis> IpnisQuestionAnswering for T {}
+impl<T: Ipnis + ?Sized> IpnisQuestionAnswering for T {}
 
 fn argmax<S>(mat: &ndarray::ArrayBase<S, ndarray::Ix2>) -> ndarray::Array1<usize>
 where
@@ -107,14 +110,14 @@ fn find_answer<SM, SL>(
     mat: &ndarray::ArrayBase<SM, ndarray::Ix2>,
     start_logits: &ndarray::ArrayBase<SL, ndarray::Ix2>,
     end_logits: &ndarray::ArrayBase<SL, ndarray::Ix2>,
-) -> Vec<ndarray::Array1<u32>>
+) -> Vec<ndarray::Array1<SM::Elem>>
 where
     SM: ndarray::Data,
     SM::Elem: Copy,
     SL: ndarray::Data,
     SL::Elem: Copy + PartialOrd,
-    u32: TryFrom<<SM as ndarray::RawData>::Elem>,
-    <u32 as TryFrom<<SM as ndarray::RawData>::Elem>>::Error: ::core::fmt::Debug,
+    i64: TryFrom<<SM as ndarray::RawData>::Elem>,
+    <i64 as TryFrom<<SM as ndarray::RawData>::Elem>>::Error: ::core::fmt::Debug,
 {
     let start_logits = argmax(start_logits);
     let end_logits = argmax(end_logits);
@@ -127,8 +130,6 @@ where
                 .skip(start)
                 .take(end - start + 1)
                 .copied()
-                .map(TryInto::try_into)
-                .map(Result::unwrap)
                 .collect()
         })
         .collect()
