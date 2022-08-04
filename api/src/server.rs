@@ -85,7 +85,7 @@ impl IpnisServer {
         let sign_as_guarantee = req.__sign.into_owned().await?;
 
         // unpack data
-        let path = sign_as_guarantee.data.data;
+        let path = sign_as_guarantee.data;
 
         // handle data
         let model = client.load_model(&path).await?;

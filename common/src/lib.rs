@@ -18,6 +18,7 @@ use ipis::{
     core::{
         account::{GuaranteeSigned, GuarantorSigned},
         anyhow::{bail, Result},
+        data::Data,
     },
     path::Path,
 };
@@ -68,7 +69,7 @@ where
             client: self,
             target: KIND.as_ref() => &target,
             request: crate::io => Call,
-            sign: self.sign(target, model.path)?,
+            sign: self.sign_owned(target, model.path)?,
             inputs: {
                 model: model.clone(),
                 inputs: inputs,
@@ -89,7 +90,7 @@ where
             client: self,
             target: KIND.as_ref() => &target,
             request: crate::io => LoadModel,
-            sign: self.sign(target, *path)?,
+            sign: self.sign_owned(target, *path)?,
             inputs: { },
             outputs: { model, },
         );
@@ -105,20 +106,20 @@ define_io! {
             model: Model,
             inputs: Vec<Tensor>,
         },
-        input_sign: GuaranteeSigned<Path>,
+        input_sign: Data<GuaranteeSigned, Path>,
         outputs: {
             outputs: Vec<Tensor>,
         },
-        output_sign: GuarantorSigned<Path>,
+        output_sign: Data<GuarantorSigned, Path>,
         generics: { },
     },
     LoadModel {
         inputs: { },
-        input_sign: GuaranteeSigned<Path>,
+        input_sign: Data<GuaranteeSigned, Path>,
         outputs: {
             model: Model,
         },
-        output_sign: GuarantorSigned<Path>,
+        output_sign: Data<GuarantorSigned, Path>,
         generics: { },
     },
 }

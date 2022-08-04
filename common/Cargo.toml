@@ -25,6 +25,6 @@ ipiis-common = { git = "https://github.com/ulagbulag-village/ipiis" }
 bytecheck = "0.6"
 image = { version = "0.24", optional = true }
 onnxruntime = { git = "https://github.com/ulagbulag-village/onnxruntime-rs.git", optional = true }
-rkyv = { version = "0.7", features = ["archive_be"] }
+rkyv = { version = "0.7", features = ["archive_le"] }
 rust_tokenizers = { version = "7.0", default-features = false, optional = true }
 zerocopy = "0.6"
