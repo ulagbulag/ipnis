@@ -26,7 +26,7 @@ async fn main() -> Result<()> {
     // NOTE: you can generate manually from: "https://github.com/kerryeon/huggingface-onnx-tutorial.git"
     let id = "1byCoCALKPn9woRXdNxCJpM4Pq5E1Lhac";
     let path = Path {
-        value: "ZHs8PuasH865vKNr43xHDd3SdpG5VvnWAjuHfeBpzUg".parse()?,
+        value: "bafybeicqbydshs5dbpwkzfcmxcf56qa4elatcbjzmx4tka2eqveeppzvcq".parse()?,
         len: 2_464_829_440,
     };
     storage.gdown_static(id, &path).await?;
@@ -39,7 +39,7 @@ async fn main() -> Result<()> {
         let vocab_path = {
             let url = "https://huggingface.co/facebook/m2m100_418M/raw/main/vocab.json";
             let path = Path {
-                value: "DJywDjN3jPFnKAU6Lq2wnLT5w57bwmYraqS86AsN2qCP".parse()?,
+                value: "bafybeicwuu62v7jecwx6sq76ylv4ppcgzea5rnsv2asu6w5ji6wyso5qra".parse()?,
                 len: 3_708_092,
             };
             storage
@@ -53,7 +53,7 @@ async fn main() -> Result<()> {
             let url =
                 "https://huggingface.co/facebook/m2m100_418M/resolve/main/sentencepiece.bpe.model";
             let path = Path {
-                value: "FbxCaxnuNbc3s7ZnMG8AMXTBy73ooeFG68jEQtSkGeTB".parse()?,
+                value: "bafybeidghpbf7jbhk56g4yljzkprztmrksrvb5rwutembsyaguo23ozxyi".parse()?,
                 len: 2_423_393,
             };
             storage

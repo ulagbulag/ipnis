@@ -32,7 +32,7 @@ async fn main() -> Result<()> {
     // NOTE: source: "https://media.githubusercontent.com/media/onnx/models/main/vision/classification/squeezenet/model/squeezenet1.1-7.onnx"
     let id = "1odXQxYCpeg42PbBQwxz37umz3nqGDwSs";
     let path = Path {
-        value: "35mTB1D1kVmxGxuVBPKVuGQrZdpab1j2Ltgx2B5CbA4P".parse()?,
+        value: "bafybeicgkrgvt3dkouzabeakshgxizfo6x7kzbfih6ecwmlepvnidsrxpq".parse()?,
         len: 4_956_208,
     };
     storage.gdown_static(id, &path).await?;
@@ -51,7 +51,7 @@ async fn main() -> Result<()> {
         {
             let url = "https://upload.wikimedia.org/wikipedia/commons/7/7a/Huskiesatrest.jpg";
             let path = Path {
-                value: "67JwwcZ5HHMP26GoVMtSh1SVS3u3wbr6GB5snKHPLfGP".parse()?,
+                value: "bafybeicnerxc4wqjxicrw3lbd77ucxlgpctp6c3wopkpokbtiirgj2uznm".parse()?,
                 len: 4_854_901,
             };
             let local_path = storage.download_web_static_on_local(url, &path).await?;

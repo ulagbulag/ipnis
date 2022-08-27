@@ -23,7 +23,7 @@ async fn main() -> Result<()> {
     // NOTE: you can generate manually from: "https://github.com/kerryeon/huggingface-onnx-tutorial.git"
     let id = "12Irr7nI5DLsG47UBDYXh4as_JQWCe0lF";
     let path = Path {
-        value: "55PMH1CZWbFLPe7sNSGQCXtxfoNewSjkCxYQygZFWrdy".parse()?,
+        value: "bafybeicxanipwgzd63olktxxinx3ldcykx7ncclayz3jwoashjcuwyqbpq".parse()?,
         len: 1_336_517_805,
     };
     storage.gdown_static(id, &path).await?;
@@ -35,7 +35,7 @@ async fn main() -> Result<()> {
     let tokenizer = {
         let url = "https://huggingface.co/bert-large-uncased-whole-word-masking-finetuned-squad/raw/main/vocab.txt";
         let path = Path {
-            value: "XwPo2jr66aUT8i7oJRougPJqmkU5RJ87bqkxXbfnYf4".parse()?,
+            value: "bafkreiah5twtoxhmcrgspsiaeqpt4m4updpmswhzf7o3yvi7ffojsibyum".parse()?,
             len: 231_508,
         };
         let local_path = storage.download_web_static_on_local(url, &path).await?;

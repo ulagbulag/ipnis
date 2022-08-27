@@ -24,7 +24,7 @@ async fn main() -> Result<()> {
     // NOTE: you can generate manually from: "https://github.com/kerryeon/huggingface-onnx-tutorial.git"
     let id = "12KkF4yGsGeExjglmeHfhGv5sJDxCRLvz";
     let path = Path {
-        value: "CPGo5mNvup9WSZWmwiUBxRmWKPXUb25LVpniXAKnBNrv".parse()?,
+        value: "bafybeifookytr64ygsjo4x2ehiwc3ycq6cxr2fo4q5t7van5b7uqggteb4".parse()?,
         len: 1_629_607_922,
     };
     storage.gdown_static(id, &path).await?;
@@ -36,14 +36,14 @@ async fn main() -> Result<()> {
     let tokenizer = {
         let url = "https://huggingface.co/facebook/bart-large-mnli/raw/main/vocab.json";
         let path = Path {
-            value: "TBNdeMd2zDstNeqDheuzvkKBDdsPxwV8uZrCfeg1mDt".parse()?,
+            value: "bafybeicxgsjqhi3haibpl5igtxni5pzrd7u32psw2uccibs3wcpxd35mmy".parse()?,
             len: 898_822,
         };
         let local_vocab_path = storage.download_web_static_on_local(url, &path).await?;
 
         let url = "https://huggingface.co/facebook/bart-large-mnli/raw/main/merges.txt";
         let path = Path {
-            value: "2wjm5iUUx5Kf85GjdYBVuFxarz5hr8fwLHX7NRRG2SHA".parse()?,
+            value: "bafybeicyfjqq7aepqcwmxcfc7rxtsioflbdjbsjjpujjimilocmal7325m".parse()?,
             len: 456_318,
         };
         let local_merges_path = storage.download_web_static_on_local(url, &path).await?;
