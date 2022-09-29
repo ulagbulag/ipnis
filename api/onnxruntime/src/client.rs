@@ -152,6 +152,10 @@ where
     IpiisClient: Ipsis + Send + Sync,
     <IpiisClient as Ipsis>::Reader: Sync,
 {
+    async fn protocol(&self) -> Result<String> {
+        Ok("onnxruntime".into())
+    }
+
     /// ## Thread-safe
     /// This method is thread-safe: https://github.com/microsoft/onnxruntime/issues/114#issuecomment-444725508
     async fn call_raw(&self, model: &Model, inputs: Vec<Tensor>) -> Result<Vec<Tensor>> {

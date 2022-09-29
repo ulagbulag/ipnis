@@ -45,12 +45,35 @@ handle_external_call!(
     server: IpnisServer => IpnisClientInner<IpiisServer>,
     name: run,
     request: ::ipnis_common::io => {
+        Protocol => handle_protocol,
         Call => handle_call,
         LoadModel => handle_load_model,
     },
 );
 
 impl IpnisServer {
+    async fn handle_protocol(
+        client: &IpnisClientInner<IpiisServer>,
+        req: ::ipnis_common::io::request::Protocol<'static>,
+    ) -> Result<::ipnis_common::io::response::Protocol<'static>> {
+        // unpack sign
+        let sign_as_guarantee = req.__sign.into_owned().await?;
+
+        // handle data
+        let protocol = client.protocol().await?;
+
+        // sign data
+        let server: &IpiisServer = client.as_ref();
+        let sign = server.sign_as_guarantor(sign_as_guarantee)?;
+
+        // pack data
+        Ok(::ipnis_common::io::response::Protocol {
+            __lifetime: Default::default(),
+            __sign: ::ipis::stream::DynStream::Owned(sign),
+            protocol: ::ipis::stream::DynStream::Owned(protocol),
+        })
+    }
+
     async fn handle_call(
         client: &IpnisClientInner<IpiisServer>,
         req: ::ipnis_common::io::request::Call<'static>,

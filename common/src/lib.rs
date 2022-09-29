@@ -30,6 +30,8 @@ use self::{
 
 #[async_trait]
 pub trait Ipnis {
+    async fn protocol(&self) -> Result<String>;
+
     async fn call<T>(&self, model: &Model, inputs: &HashMap<String, T>) -> Result<Vec<Tensor>>
     where
         T: Send + Sync + ToTensor,
@@ -60,6 +62,24 @@ impl<IpiisClient> Ipnis for IpiisClient
 where
     IpiisClient: Ipiis + Send + Sync,
 {
+    async fn protocol(&self) -> Result<String> {
+        // next target
+        let target = self.get_account_primary(KIND.as_ref()).await?;
+
+        // external call
+        let (protocol,) = external_call!(
+            client: self,
+            target: KIND.as_ref() => &target,
+            request: crate::io => Protocol,
+            sign: self.sign_owned(target, ())?,
+            inputs: { },
+            outputs: { protocol, },
+        );
+
+        // unpack response
+        Ok(protocol)
+    }
+
     async fn call_raw(&self, model: &Model, inputs: Vec<Tensor>) -> Result<Vec<Tensor>> {
         // next target
         let target = self.get_account_primary(KIND.as_ref()).await?;
@@ -101,6 +121,15 @@ where
 }
 
 define_io! {
+    Protocol {
+        inputs: { },
+        input_sign: Data<GuaranteeSigned, ()>,
+        outputs: {
+            protocol: String,
+        },
+        output_sign: Data<GuarantorSigned, ()>,
+        generics: { },
+    },
     Call {
         inputs: {
             model: Model,
